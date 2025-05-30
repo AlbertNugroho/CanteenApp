@@ -11,12 +11,15 @@ export const login = StyleSheet.create({
     color: "white",
     fontSize: 16,
     textAlign: "center",
+    fontFamily: "Calibri",
     marginTop: 10,
   },
   binuscanteenlogo: {
     paddingVertical: "60%",
   },
   buttontext: {
+    
+    fontFamily: "Calibri",
     paddingHorizontal: 10,
     fontSize: 14,
   },

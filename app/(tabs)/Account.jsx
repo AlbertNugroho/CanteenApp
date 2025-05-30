@@ -1,27 +1,99 @@
-import { View, Text, Image, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
 import React from "react";
 import accountstyle from "../../styles/accountstyle";
 import { useTheme } from "@react-navigation/native";
+import { useFonts } from "expo-font";
+
 const account = () => {
   const { colors } = useTheme();
+  const [loaded, error] = useFonts({
+    Abel: require("../../assets/fonts/Abel Regular.ttf"),
+    Calibri: require("../../assets/fonts/Calibri.ttf"),
+    LilitaOne: require("../../assets/fonts/Lilita One.ttf"),
+    PoppinsMedium: require("../../assets/fonts/Poppins Medium.ttf"),
+  });
+  if (!loaded || error) {
+    return null;
+  }
   return (
     <View style={accountstyle.container}>
-      <Image
-        style={accountstyle.card}
-        source={require("../../assets/images/cardprofile.png")}
-      />
-      <View style={accountstyle.profilecontainer}>
+      <ScrollView
+        nestedScrollEnabled={true}
+        showsVerticalScrollIndicator={false}
+      >
         <Image
-          style={accountstyle.pp}
+          style={accountstyle.card}
           source={require("../../assets/images/cardprofile.png")}
+
         />
-        <View>
-          <Text style={[accountstyle.text, { color: colors.text }]}>
-            Okky Sudibyo Rades
-          </Text>
-          <Text style={[accountstyle.text, { color: colors.text }]}>2702300575</Text>
+        <View style={accountstyle.profilecontainer}>
+          <Image
+            style={accountstyle.pp}
+            source={require("../../assets/images/image.png")}
+          />
         </View>
-      </View>
+        <View style={accountstyle.divider} />
+        <View style={accountstyle.infocard}>
+          <View style={accountstyle.infocontainer}>
+            <Text style={accountstyle.label}>Name</Text>
+            <Text style={accountstyle.text}>
+              Name DINIGARIUSDOTUNGTROLELOCINABU
+            </Text>
+          </View>
+          <View style={accountstyle.infodivider} />
+          <View style={accountstyle.infocontainer}>
+            <Text style={accountstyle.label}>Student ID</Text>
+            <Text style={accountstyle.text}>2702300575</Text>
+          </View>
+          <View style={accountstyle.infodivider} />
+          <View style={accountstyle.infocontainer}>
+            <Text style={accountstyle.label}>Email</Text>
+            <Text style={accountstyle.text}>alb.nigarius@binus.ac.id</Text>
+          </View>
+          <View style={accountstyle.infodivider} />
+          <View style={accountstyle.infocontainer}>
+            <Text style={accountstyle.label}>Phone Number</Text>
+            <Text style={accountstyle.text}>
+              +62121111212122133232132313131
+            </Text>
+          </View>
+        </View>
+        <View style={accountstyle.infocard}>
+          <TouchableOpacity>
+            <View style={accountstyle.buttoncontainer}>
+              <Image source={require("../../assets/images/lock.png")} />
+              <Text style={accountstyle.buttontext}>Change Password</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+        <View style={accountstyle.infocard}>
+          <TouchableOpacity>
+            <View style={accountstyle.buttoncontainer}>
+              <Image source={require("../../assets/images/logout.png")} />
+              <Text style={accountstyle.buttontext}>Log Out</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+        <View style={accountstyle.bottominfo}>
+          <TouchableOpacity>
+            <Text style={accountstyle.bottomtext}>Privacy Policy</Text>
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <Text style={accountstyle.bottomtext}>Terms & Conditions</Text>
+          </TouchableOpacity>
+          <Text style={accountstyle.info}>Version 0.1.0</Text>
+          <Text style={accountstyle.info}>
+            Copyright ckcakcbaiclcooacnaouvbwovakn nnnnnnnnnnnnnnnnnnnnn
+          </Text>
+        </View>
+      </ScrollView>
     </View>
   );
 };

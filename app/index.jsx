@@ -8,12 +8,24 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useFonts } from "expo-font";
 
 import React from "react";
 import binuslogo from "../styles/binuslogo";
 import login from "../styles/login";
 const App = () => {
   const router = useRouter();
+  const [loaded, error] = useFonts({
+    Abel: require("../assets/fonts/Abel Regular.ttf"),
+    Calibri: require("../assets/fonts/Calibri.ttf"),
+    LilitaOne: require("../assets/fonts/Lilita One.ttf"),
+    CalibriBold: require("../assets/fonts/Calibri Bold.ttf"),
+    PoppinsMedium: require("../assets/fonts/Poppins Medium.ttf"),
+  });
+
+  if (!loaded || error) {
+    return null;
+  }
   return (
     <View style={login.container}>
       <Text style={[binuslogo.binus, login.binuscanteenlogo]}>

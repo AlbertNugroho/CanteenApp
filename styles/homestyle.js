@@ -4,11 +4,12 @@ const homestyle = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: "column",
+    backgroundColor: "#FFFFFF",
   },
   text: {
     fontSize: 12,
-    fontWeight: "bold",
     color: "white",
+    fontFamily: "CalibriBold",
   },
   headerimg: {
     height: 15,
@@ -67,7 +68,7 @@ const homestyle = StyleSheet.create({
     paddingHorizontal: 20,
   },
   TopPicksText: {
-    fontWeight: "bold",
+    fontFamily: "CalibriBold",
     color: "black",
     fontSize: 20,
   },
@@ -101,14 +102,14 @@ const homestyle = StyleSheet.create({
   },
   promoFoodsText: {
     color: "black",
-    fontWeight: "bold",
+    fontFamily: "CalibriBold",
     fontSize: 14,
   },
   promoFoodsText2: {
     flexDirection: "row",
     color: "black",
-    fontWeight: "bold",
     fontSize: 10,
+    fontFamily: "Calibri",
   },
   Promo: {
     paddingHorizontal: 20,
@@ -134,6 +135,7 @@ const homestyle = StyleSheet.create({
   },
   last: {
     textAlign: "center",
+    fontFamily: "CalibriBold",
     marginBottom: 100,
   },
   BuyButtonContainer: {
@@ -154,14 +156,14 @@ const homestyle = StyleSheet.create({
   },
   BuyButtonText1: {
     fontSize: 16,
-    fontWeight: "bold",
+    fontFamily: "CalibriBold",
     color: "white",
   },
   BuyButtonText2: {
     fontSize: 12,
-    fontWeight: "bold",
+    fontFamily: "CalibriBold",
     color: "white",
-  }
+  },
 });
 
 export default homestyle;

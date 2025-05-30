@@ -16,18 +16,26 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
-        tabBarInactiveTintColor: Colors[colorScheme ?? "light"].tabIconDefault,
+        tabBarActiveTintColor: "#ECA219",
+        tabBarInactiveTintColor: "#000000",
         headerShown: false,
         tabBarButton: HapticTab,
+        tabBarShowLabel: false,
         tabBarBackground: TabBarBackground,
         tabBarStyle: Platform.select({
           ios: {
-            // Use a transparent background on iOS to show the blur effect
             position: "absolute",
           },
-          default: {},
+          default: {
+            height: 60,
+            backgroundColor: "#ffffff",
+          },
         }),
+        tabBarIconStyle: {
+          alignSelf: "center",
+          justifyContent: "center",
+          height: "100%",
+        },
       }}
     >
       <Tabs.Screen
@@ -58,7 +66,11 @@ export default function TabLayout() {
             <FontAwesome6 size={28} name="user-large" color={color} />
           ),
           headerShown: true,
-          headerStyle: { height: 100 },
+          headerStyle: {
+            height: 100,
+            backgroundColor: "#F7760D", // your desired header background color
+          },
+          headerTintColor: "#fff",
         }}
       />
     </Tabs>
