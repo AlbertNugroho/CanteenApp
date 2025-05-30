@@ -5,12 +5,12 @@ export const binuslogo = StyleSheet.create({
     color: "white",
     fontSize: 44,
     textAlign: "center",
-    fontWeight: "bold",
+    fontFamily: "LilitaOne",
   },
   canteen: {
     color: "#ECB819",
     fontSize: 32,
-    fontWeight: "bold",
+    fontFamily: "LilitaOne",
   },
 });
 

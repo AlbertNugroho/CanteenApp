@@ -9,97 +9,97 @@ import {
   ScrollView,
 } from "react-native";
 import React, { useEffect, useState } from "react";
+import { router } from "expo-router";
 import { useTheme } from "@react-navigation/native";
-
+import { useFonts } from "expo-font";
+import { foodOverviewData } from "../../data/FoodOverview";
 import homestyle from "../../styles/homestyle";
-type ImageType = {
-  id: string;
-  author: string;
-  width: number;
-  height: number;
-  url: string;
-  download_url: string;
-};
+
 const Home = () => {
   const { colors } = useTheme();
-  const [topPicks, setTopPicks] = useState<ImageType[]>([]);
-  const [promo, setPromo] = useState<ImageType[]>([]);
-  const [vendors, setVendors] = useState<ImageType[]>([]);
+
+  const [topPicks, setTopPicks] = useState([]);
+  const [promo, setPromo] = useState([]);
+  const [vendors, setVendors] = useState([]);
+
   const [loadingTopPicks, setLoadingTopPicks] = useState(true);
   const [loadingPromo, setLoadingPromo] = useState(true);
   const [loadingVendors, setLoadingVendors] = useState(true);
 
-  useEffect(() => {
-    fetch("https://picsum.photos/v2/list?page=4&limit=10")
-      .then((res) => res.json())
-      .then((data) => {
-        setTopPicks(data);
-        setLoadingTopPicks(false);
-      })
-      .catch(() => setLoadingTopPicks(false));
-  }, []);
+  const [loaded, error] = useFonts({
+    Abel: require("../../assets/fonts/Abel Regular.ttf"),
+    Calibri: require("../../assets/fonts/Calibri.ttf"),
+    LilitaOne: require("../../assets/fonts/Lilita One.ttf"),
+    CalibriBold: require("../../assets/fonts/Calibri Bold.ttf"),
+    PoppinsMedium: require("../../assets/fonts/Poppins Medium.ttf"),
+  });
 
   useEffect(() => {
-    fetch("https://picsum.photos/v2/list?page=2&limit=10")
-      .then((res) => res.json())
-      .then((data) => {
-        setPromo(data);
-        setLoadingPromo(false);
-      })
-      .catch(() => setLoadingPromo(false));
+    const sortedByBuyers = [...foodOverviewData].sort(
+      (a, b) => (b.totalBuyer ?? 0) - (a.totalBuyer ?? 0)
+    );
+    const top3 = sortedByBuyers.slice(0, 3);
+    const promos = foodOverviewData.filter((item) => item.promo);
+
+    setTopPicks(top3);
+    setPromo(promos);
+    setVendors(foodOverviewData);
+
+    setLoadingTopPicks(false);
+    setLoadingPromo(false);
+    setLoadingVendors(false);
   }, []);
 
-  useEffect(() => {
-    fetch("https://picsum.photos/v2/list?page=3&limit=10")
-      .then((res) => res.json())
-      .then((data) => {
-        setVendors(data);
-        setLoadingVendors(false);
-      })
-      .catch(() => setLoadingVendors(false));
-  }, []);
+  if (!loaded || error) {
+    return null;
+  }
 
-  const renderImageItem = ({ item }: { item: ImageType }) => (
+  const renderImageItem = ({ item }) => (
     <View style={[homestyle.promoFoods]}>
-      <TouchableOpacity activeOpacity={0.9}>
-        <Image
-          style={[homestyle.promoFoodsImg]}
-          source={{ uri: `https://picsum.photos/id/${item.id}/150/150` }}
-        />
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={() =>
+          router.push({ pathname: "../VendorDetails", params: { id: item.id } })
+        }
+      >
+        <Image style={[homestyle.promoFoodsImg]} source={{ uri: item.image }} />
         <View style={[homestyle.promoFoodsTextContainer]}>
-          <Text style={[homestyle.promoFoodsText]}>Bakmie Effata</Text>
-          <View style={[homestyle.promoFoodsText2]}>
+          <Text style={[homestyle.promoFoodsText]}>{item.name}</Text>
+          <View style={[homestyle.promoFoodsText2, { flexDirection: "row" }]}>
             <Image
-              style={{ width: 10, alignSelf: "center" }}
+              style={{ width: 10, alignSelf: "center", marginRight: 5 }}
               source={require("../../assets/images/Map Pin.png")}
-            ></Image>
-            <Text style={[homestyle.promoFoodsText2]}>FOODPARK BINUS</Text>
+            />
+            <Text style={[homestyle.promoFoodsText2]}>{item.place}</Text>
           </View>
         </View>
       </TouchableOpacity>
     </View>
   );
 
-  const renderVendorItem = ({ item }: { item: ImageType }) => (
+  const renderVendorItem = ({ item }) => (
     <View style={[homestyle.AllVendors]}>
-      <TouchableOpacity activeOpacity={0.9}>
-        <Image
-          style={[homestyle.promoFoodsImg]}
-          source={{ uri: `https://picsum.photos/id/${item.id}/360/210` }}
-        />
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={() =>
+          router.push({ pathname: "../VendorDetails", params: { id: item.id } })
+        }
+      >
+        <Image style={[homestyle.promoFoodsImg]} source={{ uri: item.image }} />
         <View style={[homestyle.VendorsTextContainer]}>
-          <Text style={[homestyle.promoFoodsText]}>Bakmie Effata</Text>
-          <View style={[homestyle.promoFoodsText2]}>
+          <Text style={[homestyle.promoFoodsText]}>{item.name}</Text>
+          <View style={[homestyle.promoFoodsText2, { flexDirection: "row" }]}>
             <Image
-              style={{ width: 10, alignSelf: "center" }}
+              style={{ width: 10, alignSelf: "center", marginRight: 5 }}
               source={require("../../assets/images/Map Pin.png")}
-            ></Image>
-            <Text style={[homestyle.promoFoodsText2]}>FOODPARK BINUS</Text>
+            />
+            <Text style={[homestyle.promoFoodsText2]}>{item.place}</Text>
           </View>
         </View>
       </TouchableOpacity>
     </View>
   );
+
   return (
     <View style={homestyle.container}>
       <ScrollView
@@ -117,25 +117,27 @@ const Home = () => {
                 <Image
                   style={homestyle.headerimg}
                   source={require("../../assets/images/Chevron Down.png")}
-                ></Image>
+                />
               </View>
             </TouchableOpacity>
             <Image
               style={homestyle.pp}
               source={require("../../assets/images/cardprofile.png")}
-            ></Image>
+            />
           </View>
           <View>
             <Image
               style={homestyle.BannerImg}
               source={require("../../assets/images/Banner.png")}
-            ></Image>
+            />
           </View>
         </View>
+
         <View style={homestyle.searchcontainer}>
-          <Image source={require("../../assets/images/Search.png")}></Image>
+          <Image source={require("../../assets/images/Search.png")} />
           <TextInput placeholder={"What food is on your mind?"} />
         </View>
+
         <View style={homestyle.TopPicks}>
           <Text style={homestyle.TopPicksText}>
             Top-picked by other binusians
@@ -153,6 +155,7 @@ const Home = () => {
             />
           )}
         </View>
+
         <View style={homestyle.Promo}>
           <Text style={homestyle.TopPicksText}>Promo</Text>
           {loadingPromo ? (
@@ -168,6 +171,7 @@ const Home = () => {
             />
           )}
         </View>
+
         <View style={homestyle.BrowseAll}>
           <Text style={homestyle.TopPicksText}>Browse all vendors</Text>
           {loadingVendors ? (
@@ -182,6 +186,7 @@ const Home = () => {
             </View>
           )}
         </View>
+
         <Text style={[homestyle.last]}>
           Oops, you have seen all the tenant that{"\n"}we have to offer
         </Text>
@@ -192,9 +197,7 @@ const Home = () => {
           <Text style={homestyle.BuyButtonText1}>1 item</Text>
           <Text style={homestyle.BuyButtonText2}>Rp 20.000</Text>
         </View>
-        <Image
-          source={require("../../assets/images/Shopping Cart.png")}
-        ></Image>
+        <Image source={require("../../assets/images/Shopping Cart.png")} />
       </TouchableOpacity>
     </View>
   );
