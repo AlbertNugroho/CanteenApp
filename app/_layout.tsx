@@ -1,3 +1,5 @@
+import React from "react";
+import { View } from "react-native";
 import {
   DarkTheme,
   DefaultTheme,
@@ -9,7 +11,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
-
+import { Text } from "react-native";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -37,6 +39,60 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="VendorDetails" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="OrderSummary"
+          options={{
+            header: (props) => (
+              <View
+                style={{
+                  height: 100,
+                  backgroundColor: "white",
+                  borderBottomColor: "#000000",
+                  borderBottomWidth: 2,
+                  justifyContent: "flex-end",
+                  alignItems: "flex-start",
+                  padding: 16, // optional padding
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontFamily: "Calibri",
+                  }}
+                >
+                  Order Summary
+                </Text>
+              </View>
+            ),
+          }}
+        />
+        <Stack.Screen
+          name="OrderOngoing"
+          options={{
+            header: (props) => (
+              <View
+                style={{
+                  height: 100,
+                  backgroundColor: "white",
+                  borderBottomColor: "#000000",
+                  borderBottomWidth: 2,
+                  justifyContent: "flex-end",
+                  alignItems: "flex-start",
+                  padding: 16, // optional padding
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontFamily: "Calibri",
+                  }}
+                >
+                  Order Summary
+                </Text>
+              </View>
+            ),
+          }}
+        />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />

@@ -1,4 +1,5 @@
 export type MenuItem = {
+  id: number;
   name: string;
   price: number;
   image: string;
@@ -17,6 +18,7 @@ export const foodDetailData: FoodDetail[] = [
     id: "1",
     menus: [
       {
+        id: 1,
         name: "Bakmie Spesial",
         price: 20000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -25,6 +27,7 @@ export const foodDetailData: FoodDetail[] = [
         availability: true,
       },
       {
+        id: 2,
         name: "Bakmie Pedas",
         price: 22000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -33,6 +36,7 @@ export const foodDetailData: FoodDetail[] = [
         availability: false,
       },
       {
+        id: 3,
         name: "Bakmie Jamur",
         price: 21000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -41,6 +45,7 @@ export const foodDetailData: FoodDetail[] = [
         availability: true,
       },
       {
+        id: 4,
         name: "Bakmie Bakso",
         price: 23000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -54,6 +59,7 @@ export const foodDetailData: FoodDetail[] = [
     id: "2",
     menus: [
       {
+        id: 1,
         name: "Ayam Geprek Level 1",
         price: 18000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -62,6 +68,7 @@ export const foodDetailData: FoodDetail[] = [
         availability: true,
       },
       {
+        id: 2,
         name: "Ayam Geprek Keju",
         price: 21000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -70,6 +77,7 @@ export const foodDetailData: FoodDetail[] = [
         availability: true,
       },
       {
+        id: 3,
         name: "Ayam Geprek Mozarella",
         price: 25000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -78,6 +86,7 @@ export const foodDetailData: FoodDetail[] = [
         availability: true,
       },
       {
+        id: 4,
         name: "Ayam Geprek Sambal Matah",
         price: 22000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -91,6 +100,7 @@ export const foodDetailData: FoodDetail[] = [
     id: "3",
     menus: [
       {
+        id: 1,
         name: "Cheese Burger",
         price: 25000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -99,6 +109,7 @@ export const foodDetailData: FoodDetail[] = [
         availability: false,
       },
       {
+        id: 2,
         name: "Double Beef Burger",
         price: 30000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -107,6 +118,7 @@ export const foodDetailData: FoodDetail[] = [
         availability: true,
       },
       {
+        id: 3,
         name: "Chicken Burger",
         price: 23000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -115,6 +127,7 @@ export const foodDetailData: FoodDetail[] = [
         availability: true,
       },
       {
+        id: 4,
         name: "BBQ Burger",
         price: 28000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -128,6 +141,7 @@ export const foodDetailData: FoodDetail[] = [
     id: "4",
     menus: [
       {
+        id: 1,
         name: "Beef Tacos",
         price: 23000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -136,6 +150,7 @@ export const foodDetailData: FoodDetail[] = [
         availability: false,
       },
       {
+        id: 2,
         name: "Spicy Chicken Tacos",
         price: 24000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -144,6 +159,7 @@ export const foodDetailData: FoodDetail[] = [
         availability: true,
       },
       {
+        id: 3,
         name: "Fish Tacos",
         price: 26000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -152,6 +168,7 @@ export const foodDetailData: FoodDetail[] = [
         availability: true,
       },
       {
+        id: 4,
         name: "Taco Veggie",
         price: 22000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -165,6 +182,7 @@ export const foodDetailData: FoodDetail[] = [
     id: "5",
     menus: [
       {
+        id: 1,
         name: "Sate Ayam Bumbu Kacang",
         price: 22000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -173,6 +191,7 @@ export const foodDetailData: FoodDetail[] = [
         availability: true,
       },
       {
+        id: 2,
         name: "Sate Ayam Pedas",
         price: 23000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -181,6 +200,7 @@ export const foodDetailData: FoodDetail[] = [
         availability: false,
       },
       {
+        id: 3,
         name: "Sate Kambing",
         price: 27000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -189,6 +209,7 @@ export const foodDetailData: FoodDetail[] = [
         availability: true,
       },
       {
+        id: 4,
         name: "Sate Lilit Bali",
         price: 25000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -202,6 +223,7 @@ export const foodDetailData: FoodDetail[] = [
     id: "6",
     menus: [
       {
+        id: 1,
         name: "Original Fried Chicken",
         price: 20000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -210,6 +232,7 @@ export const foodDetailData: FoodDetail[] = [
         availability: true,
       },
       {
+        id: 2,
         name: "Spicy Fried Chicken",
         price: 22000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -218,6 +241,7 @@ export const foodDetailData: FoodDetail[] = [
         availability: false,
       },
       {
+        id: 3,
         name: "Honey Garlic Chicken",
         price: 24000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",
@@ -226,6 +250,7 @@ export const foodDetailData: FoodDetail[] = [
         availability: true,
       },
       {
+        id: 4,
         name: "Korean Spicy Chicken",
         price: 26000,
         image: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg",

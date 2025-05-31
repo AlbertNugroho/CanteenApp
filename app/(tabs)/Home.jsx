@@ -26,13 +26,6 @@ const Home = () => {
   const [loadingPromo, setLoadingPromo] = useState(true);
   const [loadingVendors, setLoadingVendors] = useState(true);
 
-  const [loaded, error] = useFonts({
-    Abel: require("../../assets/fonts/Abel Regular.ttf"),
-    Calibri: require("../../assets/fonts/Calibri.ttf"),
-    LilitaOne: require("../../assets/fonts/Lilita One.ttf"),
-    CalibriBold: require("../../assets/fonts/Calibri Bold.ttf"),
-    PoppinsMedium: require("../../assets/fonts/Poppins Medium.ttf"),
-  });
 
   useEffect(() => {
     const sortedByBuyers = [...foodOverviewData].sort(
@@ -49,10 +42,6 @@ const Home = () => {
     setLoadingPromo(false);
     setLoadingVendors(false);
   }, []);
-
-  if (!loaded || error) {
-    return null;
-  }
 
   const renderImageItem = ({ item }) => (
     <View style={[homestyle.promoFoods]}>
@@ -191,14 +180,14 @@ const Home = () => {
           Oops, you have seen all the tenant that{"\n"}we have to offer
         </Text>
       </ScrollView>
-
+{/* 
       <TouchableOpacity style={homestyle.BuyButtonContainer}>
         <View style={homestyle.BuyButton}>
           <Text style={homestyle.BuyButtonText1}>1 item</Text>
           <Text style={homestyle.BuyButtonText2}>Rp 20.000</Text>
         </View>
         <Image source={require("../../assets/images/Shopping Cart.png")} />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 };

@@ -118,7 +118,7 @@ const homestyle = StyleSheet.create({
     paddingHorizontal: 20,
   },
   AllVendors: {
-    width: 360,
+    width: "100%",
     height: 210,
     marginBottom: 10,
     marginRight: 10,

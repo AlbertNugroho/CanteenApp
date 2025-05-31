@@ -8,7 +8,7 @@ const accountstyle = StyleSheet.create({
   },
   card: {
     width: "100%",
-    height: "25%",
+    height: "35%",
   },
   profilecontainer: {
     flexDirection: "row",
