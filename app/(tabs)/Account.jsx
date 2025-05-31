@@ -9,19 +9,9 @@ import {
 import React from "react";
 import accountstyle from "../../styles/accountstyle";
 import { useTheme } from "@react-navigation/native";
-import { useFonts } from "expo-font";
 
 const account = () => {
   const { colors } = useTheme();
-  const [loaded, error] = useFonts({
-    Abel: require("../../assets/fonts/Abel Regular.ttf"),
-    Calibri: require("../../assets/fonts/Calibri.ttf"),
-    LilitaOne: require("../../assets/fonts/Lilita One.ttf"),
-    PoppinsMedium: require("../../assets/fonts/Poppins Medium.ttf"),
-  });
-  if (!loaded || error) {
-    return null;
-  }
   return (
     <View style={accountstyle.container}>
       <ScrollView

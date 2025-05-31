@@ -49,12 +49,22 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="Orders"
+        name="Activity"
         options={{
-          title: "Orders",
+          title: "Activity",
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons size={28} name="file-clock" color={color} />
           ),
+          headerShown: true,
+          headerStyle: {
+            height: 100,
+            borderBottomWidth: 2,
+            backgroundColor: "#ffffff", // your desired header background color
+          },
+          headerTitleStyle:{
+            fontFamily: "Calibri"
+          },
+          headerTintColor: "#000000",
         }}
       />
 
@@ -68,9 +78,13 @@ export default function TabLayout() {
           headerShown: true,
           headerStyle: {
             height: 100,
-            backgroundColor: "#F7760D", // your desired header background color
+            borderBottomWidth: 2,
+            backgroundColor: "#ffffff", // your desired header background color
           },
-          headerTintColor: "#fff",
+          headerTitleStyle:{
+            fontFamily: "Calibri"
+          },
+          headerTintColor: "#000000",
         }}
       />
     </Tabs>
