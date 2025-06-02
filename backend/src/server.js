@@ -1,6 +1,8 @@
 // src/server.js
 require('dotenv').config(); // You'll need to install this: npm install dotenv
 
+require('./config/db');
+
 const app = require('./app');
 
 const PORT = process.env.PORT || 3001; // Use port from .env or default to 3001
