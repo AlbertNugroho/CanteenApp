@@ -17,8 +17,10 @@ app.get('/', (req, res) => {
 });
 
 // Placeholder for your API routes (you'll add these later)
-// const apiRoutes = require('./routes/index');
-// app.use('/api', apiRoutes);
+const apiRoutes = require('./routes/index');
+const mainApiRouter = require('./routes/index'); // Import your main router
+app.use('/api', apiRoutes);
+app.use('/api', mainApiRouter); // All routes from index.js will be prefixed with /api
 
 // Basic error handling (you can expand this later)
 app.use((err, req, res, next) => {
