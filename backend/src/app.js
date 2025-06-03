@@ -24,12 +24,6 @@ app.get('/', (req, res) => {
   res.send('Welcome to BINUS Canteen Backend API!');
 });
 
-// Placeholder for your API routes (you'll add these later)
-const apiRoutes = require('./routes/index');
-const mainApiRouter = require('./routes/index'); // Import your main router
-app.use('/api', apiRoutes);
-app.use('/api', mainApiRouter); // All routes from index.js will be prefixed with /api
-
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

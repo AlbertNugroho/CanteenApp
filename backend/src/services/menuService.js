@@ -9,7 +9,7 @@ exports.getMenusByTenantId = async (tenantId) => {
   try {
     const [rows] = await db.query(
       `SELECT 
-        id_menu,
+        CONCAT(id_tenant, '-', LPAD(SUBSTRING_INDEX(id_menu, '-', -1), 3, '0')) as id_menu,
         nama_menu,
         harga_menu,
         gambar_menu,
@@ -35,7 +35,7 @@ exports.getAllMenus = async () => {
   try {
     const [rows] = await db.query(
       `SELECT 
-        id_menu,
+        CONCAT(id_tenant, '-', LPAD(SUBSTRING_INDEX(id_menu, '-', -1), 3, '0')) as id_menu,
         nama_menu,
         harga_menu,
         gambar_menu,
