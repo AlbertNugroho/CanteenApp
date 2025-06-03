@@ -14,10 +14,14 @@ app.use(express.urlencoded({ extended: true })); // Parses incoming requests wit
 // Import routes
 const canteenRoutes = require('./routes/canteenRoutes');
 const menuRoutes = require('./routes/menuRoutes');
+const imageRoutes = require('./routes/imageRoutes');
+const tenantImageRoutes = require('./routes/tenantImageRoutes');
 
 // Routes
 app.use('/api/canteens', canteenRoutes);
 app.use('/api/menus', menuRoutes);
+app.use('/api/menu-images', imageRoutes);
+app.use('/api/tenant-images', tenantImageRoutes);
 
 // Basic Route for testing
 app.get('/', (req, res) => {
