@@ -11,6 +11,14 @@ app.use(morgan('dev')); // HTTP request logger
 app.use(express.json()); // Parses incoming requests with JSON payloads
 app.use(express.urlencoded({ extended: true })); // Parses incoming requests with URL-encoded payloads
 
+// Import routes
+const canteenRoutes = require('./routes/canteenRoutes');
+const menuRoutes = require('./routes/menuRoutes');
+
+// Routes
+app.use('/api/canteens', canteenRoutes);
+app.use('/api/menus', menuRoutes);
+
 // Basic Route for testing
 app.get('/', (req, res) => {
   res.send('Welcome to BINUS Canteen Backend API!');
@@ -22,10 +30,21 @@ const mainApiRouter = require('./routes/index'); // Import your main router
 app.use('/api', apiRoutes);
 app.use('/api', mainApiRouter); // All routes from index.js will be prefixed with /api
 
-// Basic error handling (you can expand this later)
+// Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).send('Something broke!');
+  res.status(500).json({
+    success: false,
+    message: 'Something went wrong!'
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Route not found'
+  });
 });
 
 module.exports = app;

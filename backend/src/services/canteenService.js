@@ -13,9 +13,7 @@ exports.fetchAllActiveCanteens = async () => {
     const sql = `
       SELECT 
         id_tenant, 
-        nama_tenant, 
-        email_tenant, 
-        pw_tenant
+        nama_tenant
       FROM mstenant
       ORDER BY nama_tenant ASC;     
     `;
