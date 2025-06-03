@@ -1,6 +1,6 @@
 // Purpose: Contains the business logic for canteens, including database interactions.
 
-const db = require('../config/db'); // Your database connection pool
+const db = require("../config/db"); // Your database connection pool
 
 /**
  * Fetches all active canteens from the database.
@@ -13,9 +13,7 @@ exports.fetchAllActiveCanteens = async () => {
     const sql = `
       SELECT 
         id_tenant, 
-        nama_tenant, 
-        email_tenant, 
-        pw_tenant
+        nama_tenant
       FROM mstenant
       ORDER BY nama_tenant ASC;     
     `;
@@ -23,9 +21,9 @@ exports.fetchAllActiveCanteens = async () => {
     const [canteens] = await db.query(sql);
     return canteens;
   } catch (error) {
-    console.error('Database error in fetchAllActiveCanteens service:', error);
+    console.error("Database error in fetchAllActiveCanteens service:", error);
     // Re-throw the error to be caught by the controller, which will send the HTTP response.
-    throw new Error('Failed to fetch canteens from database.');
+    throw new Error("Failed to fetch canteens from database.");
   }
 };
 
