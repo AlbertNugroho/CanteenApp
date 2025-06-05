@@ -2,8 +2,12 @@
 const express = require('express');
 const cors = require('cors'); // You'll need to install this: npm install cors
 const morgan = require('morgan'); // You'll need to install this: npm install morgan
+require('dotenv').config(); // Make sure this is at the top
 
 const app = express();
+
+// Debug line to check JWT_SECRET
+console.log('JWT_SECRET is set:', !!process.env.JWT_SECRET);
 
 // Middleware
 app.use(cors()); // Enable Cross-Origin Resource Sharing
@@ -12,15 +16,17 @@ app.use(express.json()); // Parses incoming requests with JSON payloads
 app.use(express.urlencoded({ extended: true })); // Parses incoming requests with URL-encoded payloads
 
 // Import routes
+const authRoutes = require('./routes/authRoutes');
 const canteenRoutes = require('./routes/canteenRoutes');
 const menuRoutes = require('./routes/menuRoutes');
 const imageRoutes = require('./routes/imageRoutes');
 const tenantImageRoutes = require('./routes/tenantImageRoutes');
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/canteens', canteenRoutes);
 app.use('/api/menus', menuRoutes);
-app.use('/api/menu-images', imageRoutes);
+app.use('/api/images', imageRoutes);
 app.use('/api/tenant-images', tenantImageRoutes);
 
 // Basic Route for testing
