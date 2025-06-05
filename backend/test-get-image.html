@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Menu Image Retrieval</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        img {
+            max-width: 100%;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Test Menu Image Retrieval</h2>
+    <div class="form-group">
+        <label for="menuId">Menu ID:</label>
+        <input type="text" id="menuId" value="T001-001" required>
+        <button onclick="getImage()">Get Image</button>
+    </div>
+
+    <div id="result" style="margin-top: 20px;"></div>
+    <div id="imageContainer"></div>
+
+    <script>
+        async function getImage() {
+            const menuId = document.getElementById('menuId').value;
+            try {
+                const response = await fetch(`http://localhost:3001/api/menu-images/${menuId}`);
+                const result = await response.json();
+                
+                document.getElementById('result').innerHTML = `
+                    <h3>Response:</h3>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+
+                if (result.success && result.data.imageUrl) {
+                    document.getElementById('imageContainer').innerHTML = `
+                        <h3>Image:</h3>
+                        <img src="${result.data.imageUrl}" alt="Menu Image">
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <h3>Error:</h3>
+                    <pre>${error.message}</pre>
+                `;
+                document.getElementById('imageContainer').innerHTML = '';
+            }
+        }
+    </script>
+</body>
+</html>
