@@ -1,38 +1,39 @@
+// src/config/db.js
 const mysql = require('mysql2');
-require('dotenv').config(); // Load environment variables from .env
+require('dotenv').config();
 
-// Create a connection pool using environment variables
 const pool = mysql.createPool({
-    host: process.env.DB_HOST, // AWS RDS Endpoint
-    user: process.env.DB_USER, // Database username
-    password: process.env.DB_PASSWORD, // Database password
-    database: process.env.DB_NAME, // Database name
-    port: process.env.DB_PORT || 3306, // Database port (Default is 3306)
-    waitForConnections: true, // Wait for connections if all are in use
-    connectionLimit: 10, //Max number of connections in pool
-    queueLimit: 0, //Max number of connection request to queue (0 = n0 limit)
-    connectTimeout: 10000 //connection timeout(10 seconds)
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT || 3306,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+  connectTimeout: 10000,
+  charset: 'utf8mb4', // Keep this
+  collation: 'utf8mb4_0900_ai_ci' // <<< ADD THIS LINE to match your DB tables
 });
 
-// Test the pool on creation (or handle in server.js for startup check)
 pool.getConnection((err, connection) => {
   if (err) {
     console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
     console.error('!!! DATABASE CONNECTION FAILED !!!');
     console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
     console.error('Error connecting to database:', err.message);
-    console.error('Please check your .env file and AWS RDS settings.');
-    // In a real app, you might want to handle this more gracefully,
-    // but exiting during startup for a failed DB connection is common.
-    // Consider adding retry logic or better health checks later.
-    process.exit(1); // Exit if connection fails on initial check
+    process.exit(1);
     return;
   }
   if (connection) {
-    connection.release(); // IMPORTANT: Release the connection back to the pool
-    console.log('✅ Successfully connected to the MySQL database via pool.');
+    // You might not even need the explicit SET NAMES query anymore
+    // if the pool is configured with the correct charset and collation.
+    // For testing, you can remove it. If issues persist, you can add it back
+    // ensuring it matches the pool's collation.
+    console.log('Attempting to verify connection settings (collation will be based on pool config)...');
+    connection.release();
+    console.log('✅ Successfully connected to the MySQL database via pool. Collation set via pool config.');
   }
 });
 
-// Export the pool with promise support, making it easier to use with async/await
 module.exports = pool.promise();
