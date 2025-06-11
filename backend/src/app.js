@@ -21,6 +21,9 @@ const canteenRoutes = require('./routes/canteenRoutes');
 const menuRoutes = require('./routes/menuRoutes');
 const imageRoutes = require('./routes/imageRoutes');
 const tenantImageRoutes = require('./routes/tenantImageRoutes');
+const orderRoutes = require('./routes/orderRoutes');
+const tenantRoutes = require('./routes/tenantRoutes');
+const cartRoutes = require('./routes/cartRoutes');
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -28,6 +31,9 @@ app.use('/api/canteens', canteenRoutes);
 app.use('/api/menus', menuRoutes);
 app.use('/api/images', imageRoutes);
 app.use('/api/tenant-images', tenantImageRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/tenants', tenantRoutes);
+app.use('/api/cart', cartRoutes);
 
 // Basic Route for testing
 app.get('/', (req, res) => {
