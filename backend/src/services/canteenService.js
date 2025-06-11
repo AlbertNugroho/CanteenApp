@@ -8,13 +8,19 @@ const db = require('../config/db'); // Your database connection pool
  */
 exports.fetchAllActiveCanteens = async () => {
   try {
-    // Adjust the SQL query based on your actual Canteens table structure and desired fields.
-    // It's good practice to select only the columns needed for the list view.
+    // Query to get canteens with their total number of successful transactions
     const sql = `
       SELECT 
-        id_tenant, 
-        nama_tenant
-      FROM mstenant
+        t.id_tenant, 
+        t.nama_tenant,
+        COALESCE(
+          (SELECT COUNT(id_user) 
+           FROM transaksi 
+           WHERE id_tenant = t.id_tenant
+           AND status = 'Completed'),
+          0
+        ) as total_buyers
+      FROM mstenant t
       ORDER BY nama_tenant ASC;     
     `;
     // The [rows] destructuring gets the first element of the array returned by db.query, which is the actual data rows.

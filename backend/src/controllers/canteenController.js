@@ -11,13 +11,16 @@ const canteenService = require('../services/canteenService');
 exports.getAllCanteens = async (req, res) => {
   try {
     const canteens = await canteenService.fetchAllActiveCanteens();
-    if (canteens.length === 0) {
-      return res.status(200).json({ message: 'No canteens found.', data: [] });
-    }
-    res.status(200).json({ message: 'Canteens fetched successfully', data: canteens });
+    res.status(200).json({
+      success: true,
+      data: canteens
+    });
   } catch (error) {
     console.error('Error in getAllCanteens controller:', error);
-    res.status(500).json({ message: 'Server error fetching canteens', error: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error fetching canteens'
+    });
   }
 };
 

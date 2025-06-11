@@ -8,16 +8,26 @@ const menuService = require('../services/menuService');
 exports.getMenusByTenantId = async (req, res) => {
   try {
     const { tenantId } = req.params;
+    console.log('Fetching menus for tenant:', tenantId);
     const menus = await menuService.getMenusByTenantId(tenantId);
     res.json({
       success: true,
       data: menus
     });
   } catch (error) {
-    console.error('Error in getMenusByTenantId controller:', error);
+    console.error('Error in getMenusByTenantId controller:', {
+      message: error.message,
+      code: error.code,
+      sqlState: error.sqlState,
+      sqlMessage: error.sqlMessage
+    });
     res.status(500).json({
       success: false,
-      message: error.message || 'Failed to fetch menus'
+      message: error.sqlMessage || error.message || 'Failed to fetch menus',
+      error: process.env.NODE_ENV === 'development' ? {
+        code: error.code,
+        sqlState: error.sqlState
+      } : undefined
     });
   }
 };
@@ -35,10 +45,19 @@ exports.getAllMenus = async (req, res) => {
       data: menus
     });
   } catch (error) {
-    console.error('Error in getAllMenus controller:', error);
+    console.error('Error in getAllMenus controller:', {
+      message: error.message,
+      code: error.code,
+      sqlState: error.sqlState,
+      sqlMessage: error.sqlMessage
+    });
     res.status(500).json({
       success: false,
-      message: error.message || 'Failed to fetch all menus'
+      message: error.sqlMessage || error.message || 'Failed to fetch all menus',
+      error: process.env.NODE_ENV === 'development' ? {
+        code: error.code,
+        sqlState: error.sqlState
+      } : undefined
     });
   }
 }; 
