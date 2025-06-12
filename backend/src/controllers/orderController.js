@@ -49,7 +49,7 @@ exports.createTransaction = async (req, res) => {
       });
     }
 
-    const transaction = await orderService.createTransactionFromCart(
+    const transaction = await orderService.checkout(
       userId,
       tenantId,
       timeslot
@@ -68,6 +68,29 @@ exports.createTransaction = async (req, res) => {
     });
   }
 };
+
+/**
+ * Get all orders for the logged-in tenant (seller)
+ * @route GET /api/orders/tenant
+ * @access Private (Seller only)
+ */
+exports.getOrdersByTenant = async (req, res) => {
+  try {
+    const tenantId = req.user.id;
+    const orders = await orderService.getOrdersByTenantId(tenantId);
+    res.json({
+      success: true,
+      data: orders
+    });
+  } catch (error) {
+    console.error('Error in getOrdersByTenant controller:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch orders'
+    });
+  }
+};
+
 
 /**
  * Update order status
@@ -130,4 +153,4 @@ exports.getOrderDetails = async (req, res) => {
       message: error.message || 'Failed to fetch order details'
     });
   }
-}; 
+};
