@@ -68,7 +68,7 @@ exports.checkout = async (userId, tenantId, timeslot) => {
     await connection.beginTransaction();
 
     // Get cart items
-    const [cartItems] = await db.query(
+    const [cartItems] = await connection.query(
       `SELECT 
         dc.id_menu,
         m.nama_menu,
@@ -148,6 +148,107 @@ exports.checkout = async (userId, tenantId, timeslot) => {
   }
 };
 
+
+/**
+ * Get all orders for a specific tenant (seller)
+ * @param {string} tenantId - The ID of the tenant
+ * @returns {Promise<Array>} A list of orders for the tenant
+ */
+exports.getOrdersByTenantId = async (tenantId) => {
+  try {
+    const [orders] = await db.query(
+      `SELECT 
+        t.id_transaksi,
+        t.tanggal,
+        t.timeslot,
+        t.total_amount,
+        t.status,
+        u.nama_user as customer_name
+      FROM transaksi t
+      JOIN msuser u ON t.id_user = u.id_user
+      WHERE t.id_tenant = ?
+      ORDER BY t.tanggal DESC`,
+      [tenantId]
+    );
+    return orders;
+  } catch (error) {
+    console.error('Error in getOrdersByTenantId service:', error);
+    throw new Error('Failed to fetch tenant orders');
+  }
+};
+
+/**
+ * Update order status
+ * @param {string} transactionId - The transaction ID
+ * @param {string} newStatus - The new status
+ * @param {string} userId - The ID of the user making the request
+ * @param {string} userRole - The role of the user ('customer' or 'seller')
+ * @returns {Promise<Object>} The result of the update operation
+ */
+exports.updateOrderStatus = async (transactionId, newStatus, userId, userRole) => {
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [transactions] = await connection.query(
+      'SELECT * FROM transaksi WHERE id_transaksi = ?',
+      [transactionId]
+    );
+
+    if (transactions.length === 0) {
+      throw new Error('Transaction not found');
+    }
+
+    const transaction = transactions[0];
+    const currentStatus = transaction.status;
+
+    // Permissions check
+    if (userRole === 'customer') {
+      if (transaction.id_user !== userId) {
+        throw new Error('You are not authorized to update this order.');
+      }
+      if (newStatus === 'Cancelled' && currentStatus === 'Pending') {
+        // Customer can cancel a pending order
+      } else {
+        throw new Error('You can only cancel an order that is pending.');
+      }
+    } else if (userRole === 'seller') {
+      if (transaction.id_tenant !== userId) {
+        throw new Error('You are not authorized to update this order.');
+      }
+      const allowedTransitions = {
+        'Pending': ['On Process', 'Cancelled'],
+        'On Process': ['Completed', 'Cancelled'],
+      };
+      if (!allowedTransitions[currentStatus]?.includes(newStatus)) {
+        throw new Error(`Cannot change status from ${currentStatus} to ${newStatus}.`);
+      }
+    } else {
+      throw new Error('Invalid user role.');
+    }
+
+    // Update the status
+    await connection.query(
+      'UPDATE transaksi SET status = ? WHERE id_transaksi = ?',
+      [newStatus, transactionId]
+    );
+
+    await connection.commit();
+
+    return {
+      message: 'Order status updated successfully.',
+      transactionId,
+      newStatus
+    };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+};
+
+
 /**
  * Get order details
  * @param {string} transactionId - The transaction ID
@@ -163,7 +264,7 @@ exports.getOrderDetails = async (transactionId) => {
         t.timeslot,
         t.total_amount,
         t.status,
-        u.nama as customer_name,
+        u.nama_user as customer_name,
         mt.nama_tenant
       FROM transaksi t
       JOIN msuser u ON t.id_user = u.id_user
@@ -198,4 +299,4 @@ exports.getOrderDetails = async (transactionId) => {
     console.error('Error in getOrderDetails service:', error);
     throw error;
   }
-}; 
+};
