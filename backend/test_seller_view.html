@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Order Management</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; max-width: 1000px; margin: 20px auto; padding: 0 20px; }
+        .section { margin-bottom: 2rem; padding: 1.5rem; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h2 { margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 0.5rem; }
+        input, select, button { padding: 10px; margin: 5px; border-radius: 4px; border: 1px solid #ccc; font-size: 1rem; }
+        button { background-color: #007bff; color: white; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #cccccc; cursor: not-allowed; }
+        .response { margin-top: 1rem; padding: 1rem; border-left: 4px solid #007bff; background-color: #f8f9fa; white-space: pre-wrap; word-wrap: break-word; }
+        .order-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+        .order-card { padding: 1rem; border: 1px solid #ddd; border-radius: 8px; }
+        .order-card h3 { margin-top: 0; font-size: 1.1rem; }
+        .order-card p { margin: 0.25rem 0; }
+        .status { font-weight: bold; padding: 2px 8px; border-radius: 12px; color: white; }
+        .status-Pending { background-color: #ffc107; color: black; }
+        .status-On.Process { background-color: #17a2b8; }
+        .status-Completed { background-color: #28a745; }
+        .status-Cancelled { background-color: #dc3545; }
+        .actions button { font-size: 0.8rem; padding: 5px 10px; margin-top: 0.5rem; }
+        .actions .btn-accept { background-color: #28a745; }
+        .actions .btn-accept:hover { background-color: #218838; }
+        .actions .btn-complete { background-color: #007bff; }
+        .actions .btn-complete:hover { background-color: #0056b3; }
+        .actions .btn-cancel { background-color: #dc3545; }
+        .actions .btn-cancel:hover { background-color: #c82333; }
+    </style>
+</head>
+<body>
+
+    <h1>Seller Order Management</h1>
+
+    <div class="section">
+        <h2>1. Seller Login</h2>
+        <div>
+            <input type="email" id="email" placeholder="Seller Email" value="tenant@example.com">
+            <input type="password" id="password" placeholder="Password" value="password">
+            <button onclick="login()">Login as Seller</button>
+        </div>
+        <div id="loginResponse" class="response" style="display:none;"></div>
+    </div>
+
+    <div class="section">
+        <h2>2. View & Manage Orders</h2>
+        <button onclick="fetchOrders()">Fetch My Orders</button>
+        <div id="orderList" class="order-list"></div>
+        <div id="orderResponse" class="response" style="display:none;"></div>
+    </div>
+
+    <script>
+        let token = localStorage.getItem('sellerToken');
+
+        // Automatically try to fetch orders if a token exists on page load
+        if (token) {
+            document.getElementById('loginResponse').textContent = 'Using stored token. Ready to fetch orders.';
+            document.getElementById('loginResponse').style.display = 'block';
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const responseEl = document.getElementById('loginResponse');
+
+            try {
+                const response = await fetch('http://localhost:3001/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                responseEl.textContent = JSON.stringify(data, null, 2);
+                responseEl.style.display = 'block';
+
+                if (data.success && data.data.user.role === 'seller') {
+                    token = data.data.token;
+                    localStorage.setItem('sellerToken', token);
+                    responseEl.textContent += '\n\nLogin successful! You can now fetch orders.';
+                } else if (data.success) {
+                     responseEl.textContent += '\n\nLogin successful, but this user is not a seller.';
+                } else {
+                    responseEl.textContent += '\n\nLogin failed.';
+                }
+            } catch (error) {
+                responseEl.textContent = 'Error: ' + error.message;
+                responseEl.style.display = 'block';
+            }
+        }
+
+        async function fetchOrders() {
+            if (!token) {
+                alert('Please login as a seller first.');
+                return;
+            }
+
+            const orderListEl = document.getElementById('orderList');
+            const orderResponseEl = document.getElementById('orderResponse');
+            orderListEl.innerHTML = '<p>Loading orders...</p>';
+
+            try {
+                const response = await fetch('http://localhost:3001/api/orders/tenant/all', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                orderListEl.innerHTML = '';
+                
+                if (data.success) {
+                    if (data.data.length === 0) {
+                        orderListEl.innerHTML = '<p>No orders found.</p>';
+                        return;
+                    }
+                    data.data.forEach(order => {
+                        const card = document.createElement('div');
+                        card.className = 'order-card';
+                        card.innerHTML = `
+                            <h3>Order #${order.id_transaksi.substring(0, 8)}</h3>
+                            <p><strong>Customer:</strong> ${order.customer_name}</p>
+                            <p><strong>Date:</strong> ${new Date(order.tanggal).toLocaleString()}</p>
+                            <p><strong>Pickup:</strong> ${order.timeslot}</p>
+                            <p><strong>Total:</strong> Rp ${order.total_amount}</p>
+                            <p><strong>Status:</strong> <span class="status status-${order.status.replace(' ', '.')}">${order.status}</span></p>
+                            <div class="actions">
+                                ${generateActionButtons(order.id_transaksi, order.status)}
+                            </div>
+                        `;
+                        orderListEl.appendChild(card);
+                    });
+                } else {
+                    orderResponseEl.textContent = 'Error fetching orders: ' + data.message;
+                    orderResponseEl.style.display = 'block';
+                }
+            } catch (error) {
+                orderResponseEl.textContent = 'Error: ' + error.message;
+                orderResponseEl.style.display = 'block';
+            }
+        }
+        
+        function generateActionButtons(transactionId, status) {
+            let buttons = '';
+            if (status === 'Pending') {
+                buttons += `<button class="btn-accept" onclick="updateOrderStatus('${transactionId}', 'On Process')">Accept</button>`;
+                buttons += `<button class="btn-cancel" onclick="updateOrderStatus('${transactionId}', 'Cancelled')">Reject</button>`;
+            } else if (status === 'On Process') {
+                buttons += `<button class="btn-complete" onclick="updateOrderStatus('${transactionId}', 'Completed')">Ready for Pickup</button>`;
+                buttons += `<button class="btn-cancel" onclick="updateOrderStatus('${transactionId}', 'Cancelled')">Cancel Order</button>`;
+            } else {
+                buttons = 'No actions available.';
+            }
+            return buttons;
+        }
+
+        async function updateOrderStatus(transactionId, newStatus) {
+            if (!token) {
+                alert('Please login first');
+                return;
+            }
+            
+            const orderResponseEl = document.getElementById('orderResponse');
+
+            try {
+                const response = await fetch(`http://localhost:3001/api/orders/${transactionId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                const data = await response.json();
+                orderResponseEl.textContent = JSON.stringify(data, null, 2);
+                orderResponseEl.style.display = 'block';
+                
+                if (data.success) {
+                    fetchOrders(); // Refresh the order list
+                }
+            } catch (error) {
+                orderResponseEl.textContent = 'Error: ' + error.message;
+                orderResponseEl.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
