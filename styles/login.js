@@ -15,28 +15,56 @@ export const login = StyleSheet.create({
     marginTop: 10,
   },
   binuscanteenlogo: {
-    paddingVertical: "60%",
+    paddingTop: "50%",
+    paddingBottom: "20%"
   },
   buttontext: {
-    
     fontFamily: "Calibri",
     paddingHorizontal: 10,
+    textAlign: "center",
     fontSize: 14,
   },
   button: {
     flexDirection: "row",
-    marginTop: 10,
+    marginTop: 20,
     textAlign: "center",
     justifyContent: "center",
     alignItems: "center",
-    width: "90%",
+    width: "100%",
     paddingVertical: "5%",
     backgroundColor: "white",
     borderRadius: 5,
+    alignSelf: "center",
   },
   microsoftlogo: {
     width: 20,
     height: 20,
+  },
+  formContainer: {
+    width: "90%",
+  },
+  label: {
+    fontFamily: "PoppinsMedium",
+    fontSize: 14,
+    marginBottom: 4,
+    color: "#444",
+  },
+  input: {
+    width: "100%",
+    height: 45,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    marginBottom: 15,
+    fontFamily: "Calibri",
+    color: "#000",
+  },
+  message: {
+    marginTop: 10,
+    fontSize: 14,
+    color: "#d00",
+    fontFamily: "PoppinsMedium",
+    textAlign: "center",
   },
 });
 

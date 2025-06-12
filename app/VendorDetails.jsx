@@ -12,6 +12,8 @@ import React, { useState, useEffect } from "react";
 import { useTheme } from "@react-navigation/native";
 import vendordetailstyle from "../styles/vendordetailstyle";
 import { router } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
+import * as SecureStore from "expo-secure-store";
 
 export default function VendorDetails() {
   const { id } = useLocalSearchParams();
@@ -20,21 +22,160 @@ export default function VendorDetails() {
   const [vendorOverview, setVendorOverview] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const increase = (menuId) => {
-    setQuantities((prev) => ({
-      ...prev,
-      [menuId]: (prev[menuId] || 0) + 1,
-    }));
+  const increase = async (menuId) => {
+    const token = await SecureStore.getItemAsync("token");
+    if (!token) return;
+
+    const currentQty = quantities[menuId] || 0;
+    const newQty = currentQty + 1;
+
+    const success = await updateCartItem(menuId, newQty, token);
+    if (success) {
+      setQuantities((prev) => ({
+        ...prev,
+        [menuId]: newQty,
+      }));
+    }
   };
 
-  const decrease = (menuId) => {
-    setQuantities((prev) => ({
-      ...prev,
-      [menuId]: prev[menuId] > 0 ? prev[menuId] - 1 : 0,
-    }));
+  const decrease = async (menuId) => {
+    const token = await SecureStore.getItemAsync("token");
+    if (!token) return;
+
+    const currentQty = quantities[menuId] || 0;
+    const newQty = currentQty - 1;
+
+    if (newQty <= 0) {
+      try {
+        await fetch(`http://192.168.0.118:3001/api/cart/delete/${menuId}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setQuantities((prev) => ({
+          ...prev,
+          [menuId]: 0,
+        }));
+        console.log(`Deleted menu ${menuId}`);
+      } catch (err) {
+        console.error("Delete failed:", err);
+      }
+    } else {
+      const success = await updateCartItem(menuId, newQty, token);
+      if (success) {
+        setQuantities((prev) => ({
+          ...prev,
+          [menuId]: newQty,
+        }));
+      }
+    }
+  };
+  const fetchCartFromServer = async () => {
+    try {
+      const token = await SecureStore.getItemAsync("token");
+      if (!token) throw new Error("Token not found");
+      console.log("Token:", token); // debug token
+
+      const response = await fetch("http://192.168.0.118:3001/api/cart", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+      console.log("Cart result from server:", result); // tambahkan ini
+
+      if (result.success && Array.isArray(result.data)) {
+        const cartItems = result.data.filter((item) => item.id_tenant === id);
+        console.log("Filtered cart items for vendor:", cartItems); // debug cartItems
+
+        const newQuantities = {};
+        cartItems.forEach((item) => {
+          newQuantities[item.id_menu] = item.quantity;
+        });
+
+        setQuantities(newQuantities);
+      } else {
+        console.warn("Unexpected cart data format:", result);
+      }
+    } catch (error) {
+      console.error("Failed to fetch cart from server:", error);
+    }
   };
 
-  // Fetch menus
+  useFocusEffect(
+    React.useCallback(() => {
+      const initCart = async () => {
+        await fetchCartFromServer();
+        console.debug("Fetched cart on focus:", Object.entries(quantities));
+      };
+
+      initCart();
+
+      // Optional cleanup
+      return () => {};
+    }, [id])
+  );
+
+  const updateCartItem = async (menuId, newQuantity, token) => {
+    try {
+      const response = await fetch(
+        "http://192.168.0.118:3001/api/cart/update",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            menuId,
+            quantity: newQuantity,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      if (!data.success) {
+        console.error("Update failed:", data.message);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("Error updating cart:", error.message);
+      return false;
+    }
+  };
+
+  const handleAdd = async (menuId, quantity = 1) => {
+    const token = await SecureStore.getItemAsync("token");
+    if (!token) return;
+
+    try {
+      await fetch("http://192.168.0.118:3001/api/cart/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          menuId,
+          tenantId: id,
+          quantity,
+        }),
+      });
+
+      setQuantities((prev) => ({
+        ...prev,
+        [menuId]: quantity,
+      }));
+
+      console.log(`Added menu ${menuId} = ${quantity}`);
+    } catch (error) {
+      console.error("Add failed:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchMenus = async () => {
       try {
@@ -115,7 +256,9 @@ export default function VendorDetails() {
             <TouchableOpacity
               style={vendordetailstyle.addButtontoppicks}
               disabled={item.availability !== "Available"}
-              onPress={() => increase(item.id_menu)}
+              onPress={() => {
+                handleAdd(item.id_menu, 1, true); // explicitly sync as add
+              }}
             >
               <Text style={{ color: "#000000", fontFamily: "Calibri" }}>
                 {item.availability === "Available" ? "Add" : "Sold Out"}
@@ -148,7 +291,7 @@ export default function VendorDetails() {
       {totalItems > 0 && (
         <TouchableOpacity
           style={vendordetailstyle.BuyButtonContainer}
-          onPress={() => {
+          onPress={async () => {
             router.push({
               pathname: "/OrderSummary",
               params: { id },
@@ -252,7 +395,9 @@ export default function VendorDetails() {
                     <TouchableOpacity
                       style={vendordetailstyle.addButton}
                       disabled={menu.availability !== "Available"}
-                      onPress={() => increase(menu.id_menu)}
+                      onPress={() => {
+                        handleAdd(menu.id_menu, 1, true); // explicitly sync as add
+                      }}
                     >
                       <Text style={{ color: "#FFFFFF", fontFamily: "Calibri" }}>
                         {menu.availability === "Available" ? "Add" : "Sold Out"}

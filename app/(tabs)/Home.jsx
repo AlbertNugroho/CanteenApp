@@ -169,23 +169,6 @@ const Home = () => {
           )}
         </View>
 
-        {/* Promo Section */}
-        <View style={homestyle.Promo}>
-          <Text style={homestyle.TopPicksText}>Promo</Text>
-          {loadingPromo ? (
-            <ActivityIndicator size="large" />
-          ) : (
-            <FlatList
-              data={promo}
-              horizontal
-              keyExtractor={(item) => item.id_tenant?.toString()}
-              renderItem={renderImageItem}
-              showsHorizontalScrollIndicator={false}
-              style={{ marginVertical: 10 }}
-            />
-          )}
-        </View>
-
         {/* All Vendors */}
         <View style={homestyle.BrowseAll}>
           <Text style={homestyle.TopPicksText}>Browse all vendors</Text>

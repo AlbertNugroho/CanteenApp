@@ -1,139 +1,147 @@
 import { View, Text, ScrollView, Image, TouchableOpacity } from "react-native";
 import React, { useState, useEffect } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { OrderDatas } from "../data/orderData";
-import { foodDetailData } from "../data/FoodDetail";
+import * as SecureStore from "expo-secure-store";
 import ordersummarystyle from "../styles/ordersummarystyle";
 
-const OrderSummary = () => {
+export default function OrderSummary() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
-  const order = OrderDatas.find((v) => v.id === (id));
-  const vendor = foodDetailData.find((v) => v.id === Number(id));
+  const [vendorMenus, setVendorMenus] = useState([]);
+  const [quantities, setQuantities] = useState({});
+  const [loading, setLoading] = useState(true);
 
-  const [quantities, setQuantities] = useState(() => {
-    const initialQuantities = {};
-    order?.data.forEach((item) => {
-      initialQuantities[item.menuid] = item.quantity;
-    });
-    return initialQuantities;
-  });
-
-  const increase = (menuid) => {
-    setQuantities((prev) => ({
-      ...prev,
-      [menuid]: (prev[menuid] || 0) + 1,
-    }));
-  };
-
-  const decrease = (menuid) => {
-    setQuantities((prev) => ({
-      ...prev,
-      [menuid]: prev[menuid] > 0 ? prev[menuid] - 1 : 0,
-    }));
-  };
-
-  const totalPrice = order?.data.reduce((sum, item) => {
-    const menuItem = vendor?.menus.find((m) => m.id === item.menuid);
-    const quantity = quantities[item.menuid] || 0;
-    return sum + (menuItem?.price || 0) * quantity;
-  }, 0) || 0;
-
-  const afteradmin = totalPrice + 3000;
-
-  // 🔁 Auto navigate back if all items are 0
   useEffect(() => {
-    const allZero = Object.values(quantities).every((q) => q === 0);
-    if (allZero) {
-      router.back();
-    }
-  }, [quantities]);
+    (async () => {
+      try {
+        const token = await SecureStore.getItemAsync("token");
+        const [menusRes, cartRes] = await Promise.all([
+          fetch(`http://192.168.0.118:3001/api/menus/tenants/${id}`),
+          fetch("http://192.168.0.118:3001/api/cart", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
 
-  if (!order || !vendor) {
-    return (
-      <View style={ordersummarystyle.container}>
-        <Text style={{ padding: 16 }}>Order or Vendor not found.</Text>
-      </View>
-    );
-  }
+        const { data: menus } = await menusRes.json();
+        const { data: cartItems } = await cartRes.json();
+        console.log("menus", menus);
+        console.log("cartItems", cartItems);
+        setVendorMenus(menus);
+        const initQty = {};
+        cartItems.forEach((c) => {
+          initQty[c.id_menu] = c.quantity;
+        });
+        setQuantities(initQty);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching data", err);
+      }
+    })();
+  }, [id]);
+
+  const updateCartItem = async (menuId, newQty) => {
+    const token = await SecureStore.getItemAsync("token");
+    await fetch("http://192.168.0.118:3001/api/cart/update", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ menuId, quantity: newQty }),
+    });
+  };
+
+  const increase = async (menuId) => {
+    const newQty = (quantities[menuId] || 0) + 1;
+    await updateCartItem(menuId, newQty);
+    setQuantities((q) => ({ ...q, [menuId]: newQty }));
+  };
+
+  const decrease = async (menuId) => {
+    const newQty = (quantities[menuId] || 0) - 1;
+    if (newQty <= 0) {
+      const token = await SecureStore.getItemAsync("token");
+      await fetch(`http://192.168.0.118:3001/api/cart/delete/${menuId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } else {
+      await updateCartItem(menuId, newQty);
+    }
+    setQuantities((q) => ({ ...q, [menuId]: Math.max(newQty, 0) }));
+  };
+
+  if (loading) return <Text>Loading...</Text>;
+
+  const lineItems = Object.entries(quantities)
+    .map(([menuId, qty]) => {
+      const menu = vendorMenus.find((m) => m.id_menu === menuId);
+      return menu && qty > 0
+        ? { menu, qty, lineTotal: qty * parseFloat(menu.harga_menu) }
+        : null;
+    })
+    .filter(Boolean);
+
+  const total = lineItems.reduce((sum, item) => sum + item.lineTotal, 0);
+  const totalWithAdmin = total + 3000;
 
   return (
     <View style={ordersummarystyle.container}>
       <ScrollView style={{ padding: 16 }}>
         <Text style={ordersummarystyle.Text}>Order Details</Text>
-        <View style={ordersummarystyle.ordercontainer}>
-          {order.data.map((item, index) => {
-            const quantity = quantities[item.menuid];
-            if (quantity === 0) return null; // 👈 Skip zero quantity
-
-            const menuItem = vendor.menus.find((m) => m.id === item.menuid);
-            return (
-              <View key={index} style={ordersummarystyle.infocontainer}>
-                <View style={ordersummarystyle.infocontainertext}>
-                  <Text style={ordersummarystyle.infocontainertext1}>
-                    {menuItem.name}
-                  </Text>
-                  <Text style={ordersummarystyle.infocontainertext2}>
-                    Rp {menuItem.price.toLocaleString("id-ID")}
-                  </Text>
-                  <View style={ordersummarystyle.counterContainer}>
-                    <TouchableOpacity
-                      style={ordersummarystyle.button}
-                      onPress={() => decrease(menuItem.id)}
-                    >
-                      <Text style={ordersummarystyle.counterbuttonText}>-</Text>
-                    </TouchableOpacity>
-
-                    <Text style={ordersummarystyle.quantityText}>
-                      {quantities[menuItem.id]}
-                    </Text>
-
-                    <TouchableOpacity
-                      style={ordersummarystyle.button}
-                      onPress={() => increase(menuItem.id)}
-                    >
-                      <Text style={ordersummarystyle.counterbuttonText}>+</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-                <Image
-                  source={{ uri: menuItem.image }}
-                  style={{
-                    width: 100,
-                    height: 100,
-                    borderRadius: 8,
-                  }}
-                />
+        {lineItems.map(({ menu, qty }) => (
+          <View key={menu.id_menu} style={ordersummarystyle.infocontainer}>
+            <View style={ordersummarystyle.infocontainertext}>
+              <Text style={ordersummarystyle.infocontainertext1}>
+                {menu.nama_menu}
+              </Text>
+              <Text style={ordersummarystyle.infocontainertext2}>
+                Rp {parseFloat(menu.harga_menu).toLocaleString("id-ID")}
+              </Text>
+              <View style={ordersummarystyle.counterContainer}>
+                <TouchableOpacity
+                  onPress={() => decrease(menu.id_menu)}
+                  style={ordersummarystyle.button}
+                >
+                  <Text style={ordersummarystyle.counterbuttonText}>-</Text>
+                </TouchableOpacity>
+                <Text style={ordersummarystyle.quantityText}>{qty}</Text>
+                <TouchableOpacity
+                  onPress={() => increase(menu.id_menu)}
+                  style={ordersummarystyle.button}
+                >
+                  <Text style={ordersummarystyle.counterbuttonText}>+</Text>
+                </TouchableOpacity>
               </View>
-            );
-          })}
-        </View>
+            </View>
+            <Image
+              source={{ uri: menu.gambar_menu }}
+              style={{ width: 80, height: 80, borderRadius: 8 }}
+            />
+          </View>
+        ))}
 
         <Text style={ordersummarystyle.Text}>Payment Summary</Text>
         <View style={ordersummarystyle.ordercontainer}>
-          <View style={ordersummarystyle.paymentcontainer}>
-            <Text style={ordersummarystyle.paymenttext}>Price</Text>
-            <Text style={ordersummarystyle.infocontainertext2}>
-              Rp {totalPrice.toLocaleString("id-ID")}
-            </Text>
-          </View>
-          <View style={ordersummarystyle.paymentcontainer}>
-            <Text style={ordersummarystyle.paymenttext}>Admin</Text>
-            <Text style={ordersummarystyle.infocontainertext2}>Rp 3.000</Text>
-          </View>
-          <View style={ordersummarystyle.paymentcontainer}>
-            <Text style={ordersummarystyle.paymenttext}>Total Payment</Text>
-            <Text style={ordersummarystyle.infocontainertext2}>
-              Rp {afteradmin.toLocaleString("id-ID")}
-            </Text>
-          </View>
+          {[
+            { label: "Price", value: total },
+            { label: "Admin", value: 3000 },
+            { label: "Total Payment", value: totalWithAdmin },
+          ].map(({ label, value }) => (
+            <View key={label} style={ordersummarystyle.paymentcontainer}>
+              <Text style={ordersummarystyle.paymenttext}>{label}</Text>
+              <Text style={ordersummarystyle.infocontainertext2}>
+                Rp {value.toLocaleString("id-ID")}
+              </Text>
+            </View>
+          ))}
 
           <TouchableOpacity
             style={[
               ordersummarystyle.orderbutton,
-              totalPrice === 0 && { opacity: 0.5 },
+              total === 0 && { opacity: 0.5 },
             ]}
-            disabled={totalPrice === 0}
+            disabled={total === 0}
             onPress={() => router.push("/Home")}
           >
             <Text style={ordersummarystyle.buttontext}>Confirm Order</Text>
@@ -142,6 +150,4 @@ const OrderSummary = () => {
       </ScrollView>
     </View>
   );
-};
-
-export default OrderSummary;
+}
