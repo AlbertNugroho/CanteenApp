@@ -39,7 +39,7 @@ export default function VendorDetails() {
     const fetchMenus = async () => {
       try {
         const response = await fetch(
-          `http://192.168.0.101:3001/api/menus/tenants/${id}`
+          `http://192.168.0.118:3001/api/menus/tenants/${id}`
         );
         const data = await response.json();
         setVendorMenus(data.data);
@@ -52,14 +52,11 @@ export default function VendorDetails() {
     fetchMenus();
   }, [id]);
 
-  // Fetch vendor overview
-  // Fetch vendor overview
   useEffect(() => {
     const fetchVendor = async () => {
       try {
-        const response = await fetch("http://192.168.0.101:3001/api/canteens");
+        const response = await fetch("http://192.168.0.118:3001/api/canteens");
         const data = await response.json();
-        // find vendor by comparing id_tenant with id from params
         const foundVendor = data.data.find((v) => v.id_tenant === id);
         setVendorOverview(foundVendor || null);
       } catch (error) {
@@ -105,7 +102,7 @@ export default function VendorDetails() {
           style={vendordetailstyle.FoodImg}
           source={{ uri: item.gambar_menu }}
         />
-        {!item.availability && (
+        {item.availability !== "Available" && (
           <View style={vendordetailstyle.unavailableOverlay} />
         )}
         <View style={vendordetailstyle.FoodTextContainer}>
@@ -117,11 +114,11 @@ export default function VendorDetails() {
           {quantity === 0 ? (
             <TouchableOpacity
               style={vendordetailstyle.addButtontoppicks}
-              disabled={item.availability !== 1}
+              disabled={item.availability !== "Available"}
               onPress={() => increase(item.id_menu)}
             >
               <Text style={{ color: "#000000", fontFamily: "Calibri" }}>
-                {item.availability === 1 ? "Add" : "Sold Out"}
+                {item.availability === "Available" ? "Add" : "Sold Out"}
               </Text>
             </TouchableOpacity>
           ) : (
@@ -151,12 +148,12 @@ export default function VendorDetails() {
       {totalItems > 0 && (
         <TouchableOpacity
           style={vendordetailstyle.BuyButtonContainer}
-          onPress={() =>
+          onPress={() => {
             router.push({
               pathname: "/OrderSummary",
               params: { id },
-            })
-          }
+            });
+          }}
         >
           <View style={vendordetailstyle.BuyButton}>
             <Text style={vendordetailstyle.BuyButtonText1}>
@@ -233,7 +230,7 @@ export default function VendorDetails() {
                 }}
                 style={vendordetailstyle.image}
               />
-              {menu.availability !== 1 && (
+              {menu.availability !== "Available" && (
                 <View style={vendordetailstyle.unavailableOverlay} />
               )}
               <View style={vendordetailstyle.info}>
@@ -254,11 +251,11 @@ export default function VendorDetails() {
                   {quantity === 0 ? (
                     <TouchableOpacity
                       style={vendordetailstyle.addButton}
-                      disabled={menu.availability !== 1}
+                      disabled={menu.availability !== "Available"}
                       onPress={() => increase(menu.id_menu)}
                     >
                       <Text style={{ color: "#FFFFFF", fontFamily: "Calibri" }}>
-                        {menu.availability === 1 ? "Add" : "Sold Out"}
+                        {menu.availability === "Available" ? "Add" : "Sold Out"}
                       </Text>
                     </TouchableOpacity>
                   ) : (

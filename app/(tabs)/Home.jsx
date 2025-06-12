@@ -27,26 +27,22 @@ const Home = () => {
   useEffect(() => {
     const fetchVendors = async () => {
       try {
-        const res = await fetch("http://192.168.0.101:3001/api/canteens");
+        const res = await fetch("http://192.168.0.118:3001/api/canteens");
         const data = await res.json();
 
         setVendors(data.data);
         setLoadingVendors(false);
 
-        const sortedByBuyers = [...data].sort(
-          (a, b) => (b.totalBuyer ?? 0) - (a.totalBuyer ?? 0)
+        const sortedByBuyers = [...data.data].sort(
+          (a, b) => (b.total_buyers ?? 0) - (a.total_buyers ?? 0)
         );
         const top3 = sortedByBuyers.slice(0, 3);
-        const promos = data.filter((item) => item.promo);
 
         setTopPicks(top3);
-        setPromo(promos);
         setLoadingTopPicks(false);
-        setLoadingPromo(false);
       } catch (error) {
         console.error("Failed to fetch canteens:", error);
         setLoadingTopPicks(false);
-        setLoadingPromo(false);
         setLoadingVendors(false);
       }
     };

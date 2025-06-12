@@ -8,8 +8,8 @@ import ordersummarystyle from "../styles/ordersummarystyle";
 const OrderSummary = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams();
-  const order = OrderDatas.find((v) => v.id === Number(id));
-  const vendor = foodDetailData.find((v) => v.id === id);
+  const order = OrderDatas.find((v) => v.id === (id));
+  const vendor = foodDetailData.find((v) => v.id === Number(id));
 
   const [quantities, setQuantities] = useState(() => {
     const initialQuantities = {};
