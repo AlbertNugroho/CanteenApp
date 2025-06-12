@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Order System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .timeslot {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+        .timeslot:hover {
+            background-color: #e0e0e0;
+            cursor: pointer;
+        }
+        .timeslot.selected {
+            background-color: #4CAF50;
+            color: white;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input {
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+        #response {
+            margin-top: 20px;
+            padding: 10px;
+            border-left: 4px solid #4CAF50;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <h2>1. Login First</h2>
+        <div>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="login()">Login</button>
+        </div>
+        <div id="loginResponse"></div>
+    </div>
+
+    <div class="section">
+        <h2>2. Check Available Timeslots</h2>
+        <div>
+            <input type="text" id="tenantId" placeholder="Tenant ID">
+            <input type="date" id="date" value="">
+            <button onclick="checkTimeslots()">Check Timeslots</button>
+        </div>
+        <div id="timeslots"></div>
+    </div>
+
+    <div class="section">
+        <h2>3. Create Order</h2>
+        <div>
+            <button onclick="createOrder()">Create Order with Selected Timeslot</button>
+        </div>
+        <div id="orderResponse"></div>
+    </div>
+
+    <script>
+        let token = '';
+        let selectedTimeslot = null;
+
+        // Set today's date as default
+        document.getElementById('date').valueAsDate = new Date();
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('http://localhost:3001/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    token = data.data.token;
+                    document.getElementById('loginResponse').innerHTML = 'Login successful!';
+                } else {
+                    document.getElementById('loginResponse').innerHTML = 'Login failed: ' + data.message;
+                }
+            } catch (error) {
+                document.getElementById('loginResponse').innerHTML = 'Error: ' + error.message;
+            }
+        }
+
+        async function checkTimeslots() {
+            const tenantId = document.getElementById('tenantId').value;
+            const date = document.getElementById('date').value;
+
+            try {
+                const response = await fetch(`http://localhost:3001/api/orders/timeslots/${tenantId}?date=${date}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const timeslotsDiv = document.getElementById('timeslots');
+                    timeslotsDiv.innerHTML = '';
+
+                    data.data.forEach(slot => {
+                        const div = document.createElement('div');
+                        div.className = 'timeslot';
+                        div.innerHTML = `
+                            <span>${slot.time} - ${slot.endTime}</span>
+                            <span>Available: ${slot.available}/${slot.total}</span>
+                        `;
+                        div.onclick = () => selectTimeslot(slot.time, div);
+                        timeslotsDiv.appendChild(div);
+                    });
+                } else {
+                    document.getElementById('timeslots').innerHTML = 'Error: ' + data.message;
+                }
+            } catch (error) {
+                document.getElementById('timeslots').innerHTML = 'Error: ' + error.message;
+            }
+        }
+
+        function selectTimeslot(time, element) {
+            // Remove previous selection
+            document.querySelectorAll('.timeslot').forEach(slot => {
+                slot.classList.remove('selected');
+            });
+
+            // Add selection to clicked element
+            element.classList.add('selected');
+            selectedTimeslot = time;
+        }
+
+        async function createOrder() {
+            if (!token) {
+                document.getElementById('orderResponse').innerHTML = 'Please login first';
+                return;
+            }
+
+            if (!selectedTimeslot) {
+                document.getElementById('orderResponse').innerHTML = 'Please select a timeslot first';
+                return;
+            }
+
+            const tenantId = document.getElementById('tenantId').value;
+
+            try {
+                const response = await fetch('http://localhost:3001/api/orders/checkout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        tenantId,
+                        timeslot: selectedTimeslot
+                    })
+                });
+
+                const data = await response.json();
+                document.getElementById('orderResponse').innerHTML = 
+                    data.success ? 
+                    `Order created successfully! Transaction ID: ${data.data.transactionId}` : 
+                    'Error: ' + data.message;
+            } catch (error) {
+                document.getElementById('orderResponse').innerHTML = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html> 

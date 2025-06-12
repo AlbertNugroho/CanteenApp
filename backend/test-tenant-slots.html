@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tenant Slot Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input {
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+        .info-box {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .timeslot-list {
+            margin-top: 20px;
+        }
+        .timeslot {
+            padding: 10px;
+            background-color: #f5f5f5;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <h2>1. Seller Login</h2>
+        <div>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="login()">Login</button>
+        </div>
+        <div id="loginResponse" class="info-box"></div>
+    </div>
+
+    <div class="section">
+        <h2>2. Set Slot Capacity</h2>
+        <div>
+            <input type="number" id="slotCapacity" placeholder="Orders per timeslot" min="1">
+            <button onclick="updateSlotCapacity()">Update Capacity</button>
+        </div>
+        <div id="updateResponse" class="info-box"></div>
+    </div>
+
+    <div class="section">
+        <h2>3. Available Timeslots</h2>
+        <p>These are the fixed timeslots for all days:</p>
+        <div class="timeslot-list">
+            <div class="timeslot">09:00 - 09:20</div>
+            <div class="timeslot">11:00 - 11:20</div>
+            <div class="timeslot">13:00 - 13:20</div>
+            <div class="timeslot">15:00 - 15:20</div>
+            <div class="timeslot">17:00 - 17:20</div>
+        </div>
+    </div>
+
+    <script>
+        let token = '';
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('http://localhost:3001/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    token = data.data.token;
+                    document.getElementById('loginResponse').innerHTML = 
+                        `Login successful! Role: ${data.data.user.role}`;
+                    
+                    // If not a seller, show warning
+                    if (data.data.user.role !== 'seller') {
+                        document.getElementById('loginResponse').innerHTML += 
+                            '<br><br>Warning: You need to be logged in as a seller to update slot capacity.';
+                    }
+                } else {
+                    document.getElementById('loginResponse').innerHTML = 'Login failed: ' + data.message;
+                }
+            } catch (error) {
+                document.getElementById('loginResponse').innerHTML = 'Error: ' + error.message;
+            }
+        }
+
+        async function updateSlotCapacity() {
+            if (!token) {
+                document.getElementById('updateResponse').innerHTML = 'Please login first';
+                return;
+            }
+
+            const slotCapacity = parseInt(document.getElementById('slotCapacity').value);
+            
+            if (isNaN(slotCapacity) || slotCapacity < 1) {
+                document.getElementById('updateResponse').innerHTML = 'Please enter a valid number (minimum 1)';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3001/api/tenants/slot-capacity', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ slotPerTime: slotCapacity })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('updateResponse').innerHTML = 
+                        `Successfully updated! New capacity: ${data.data.slot_per_time} orders per timeslot`;
+                } else {
+                    document.getElementById('updateResponse').innerHTML = 'Update failed: ' + data.message;
+                }
+            } catch (error) {
+                document.getElementById('updateResponse').innerHTML = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html> 
