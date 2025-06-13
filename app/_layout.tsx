@@ -38,7 +38,9 @@ export default function RootLayout() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="Register" options={{ headerShown: false }} />
         <Stack.Screen name="VendorDetails" options={{ headerShown: false }} />
+        <Stack.Screen name="paymentsuccess" options={{ headerShown: false }} />
         <Stack.Screen
           name="OrderSummary"
           options={{
@@ -61,6 +63,33 @@ export default function RootLayout() {
                   }}
                 >
                   Order Summary
+                </Text>
+              </View>
+            ),
+          }}
+        />
+        <Stack.Screen
+          name="Payment"
+          options={{
+            header: (props) => (
+              <View
+                style={{
+                  height: 100,
+                  backgroundColor: "white",
+                  borderBottomColor: "#000000",
+                  borderBottomWidth: 2,
+                  justifyContent: "flex-end",
+                  alignItems: "flex-start",
+                  padding: 16, // optional padding
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontFamily: "Calibri",
+                  }}
+                >
+                  Payment
                 </Text>
               </View>
             ),

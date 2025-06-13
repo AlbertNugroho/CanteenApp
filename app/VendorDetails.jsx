@@ -14,6 +14,7 @@ import vendordetailstyle from "../styles/vendordetailstyle";
 import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
+import BASE_URL from "../utils/config";
 
 export default function VendorDetails() {
   const { id } = useLocalSearchParams();
@@ -47,7 +48,7 @@ export default function VendorDetails() {
 
     if (newQty <= 0) {
       try {
-        await fetch(`http://192.168.0.118:3001/api/cart/delete/${menuId}`, {
+        await fetch(`${BASE_URL}/api/cart/delete/${menuId}`, {
           method: "DELETE",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -77,7 +78,7 @@ export default function VendorDetails() {
       if (!token) throw new Error("Token not found");
       console.log("Token:", token); // debug token
 
-      const response = await fetch("http://192.168.0.118:3001/api/cart", {
+      const response = await fetch(`${BASE_URL}/api/cart`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -120,20 +121,17 @@ export default function VendorDetails() {
 
   const updateCartItem = async (menuId, newQuantity, token) => {
     try {
-      const response = await fetch(
-        "http://192.168.0.118:3001/api/cart/update",
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            menuId,
-            quantity: newQuantity,
-          }),
-        }
-      );
+      const response = await fetch(`${BASE_URL}/api/cart/update`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          menuId,
+          quantity: newQuantity,
+        }),
+      });
 
       const data = await response.json();
       if (!data.success) {
@@ -152,7 +150,7 @@ export default function VendorDetails() {
     if (!token) return;
 
     try {
-      await fetch("http://192.168.0.118:3001/api/cart/add", {
+      await fetch(`${BASE_URL}/api/cart/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -179,9 +177,7 @@ export default function VendorDetails() {
   useEffect(() => {
     const fetchMenus = async () => {
       try {
-        const response = await fetch(
-          `http://192.168.0.118:3001/api/menus/tenants/${id}`
-        );
+        const response = await fetch(`${BASE_URL}/api/menus/tenants/${id}`);
         const data = await response.json();
         setVendorMenus(data.data);
       } catch (error) {
@@ -196,9 +192,10 @@ export default function VendorDetails() {
   useEffect(() => {
     const fetchVendor = async () => {
       try {
-        const response = await fetch("http://192.168.0.118:3001/api/canteens");
+        const response = await fetch(`${BASE_URL}/api/canteens`);
         const data = await response.json();
         const foundVendor = data.data.find((v) => v.id_tenant === id);
+        console.log("BASE_URL is", BASE_URL);
         setVendorOverview(foundVendor || null);
       } catch (error) {
         console.error("Failed to fetch vendor overview:", error);
@@ -292,7 +289,7 @@ export default function VendorDetails() {
         <TouchableOpacity
           style={vendordetailstyle.BuyButtonContainer}
           onPress={async () => {
-            router.push({
+            router.replace({
               pathname: "/OrderSummary",
               params: { id },
             });

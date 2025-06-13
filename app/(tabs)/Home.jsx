@@ -12,6 +12,7 @@ import React, { useEffect, useState } from "react";
 import { router } from "expo-router";
 import { useTheme } from "@react-navigation/native";
 import homestyle from "../../styles/homestyle";
+import BASE_URL from "../../utils/config";
 
 const Home = () => {
   const { colors } = useTheme();
@@ -27,7 +28,7 @@ const Home = () => {
   useEffect(() => {
     const fetchVendors = async () => {
       try {
-        const res = await fetch("http://192.168.0.118:3001/api/canteens");
+        const res = await fetch(`${BASE_URL}/api/canteens`);
         const data = await res.json();
 
         setVendors(data.data);

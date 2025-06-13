@@ -12,8 +12,9 @@ import React, { useState } from "react";
 import * as SecureStore from "expo-secure-store";
 import binuslogo from "../styles/binuslogo";
 import login from "../styles/login";
+import BASE_URL from "../utils/config";
 
-const App = () => {
+const Login = () => {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -26,13 +27,14 @@ const App = () => {
     LilitaOne: require("../assets/fonts/Lilita One.ttf"),
     CalibriBold: require("../assets/fonts/Calibri Bold.ttf"),
     PoppinsMedium: require("../assets/fonts/Poppins Medium.ttf"),
+    Karatina: require("../assets/fonts/Karatina.ttf"),
   });
 
   if (!loaded || error) return null;
 
   const handleLogin = async () => {
     try {
-      const response = await fetch("http://192.168.0.118:3001/api/auth/login", {
+      const response = await fetch(`${BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -88,7 +90,10 @@ const App = () => {
           <Text style={login.buttontext}>Sign In</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={login.button} onPress={handleLogin}>
+        <TouchableOpacity
+          style={login.button}
+          onPress={() => router.push("/Register")}
+        >
           <Text style={login.buttontext}>Register</Text>
         </TouchableOpacity>
 
@@ -99,4 +104,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default Login;

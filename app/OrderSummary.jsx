@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import ordersummarystyle from "../styles/ordersummarystyle";
+import BASE_URL from "../utils/config";
 
 export default function OrderSummary() {
   const router = useRouter();
@@ -16,8 +17,8 @@ export default function OrderSummary() {
       try {
         const token = await SecureStore.getItemAsync("token");
         const [menusRes, cartRes] = await Promise.all([
-          fetch(`http://192.168.0.118:3001/api/menus/tenants/${id}`),
-          fetch("http://192.168.0.118:3001/api/cart", {
+          fetch(`${BASE_URL}/api/menus/tenants/${id}`),
+          fetch(`${BASE_URL}/api/cart`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -41,7 +42,7 @@ export default function OrderSummary() {
 
   const updateCartItem = async (menuId, newQty) => {
     const token = await SecureStore.getItemAsync("token");
-    await fetch("http://192.168.0.118:3001/api/cart/update", {
+    await fetch(`${BASE_URL}/api/cart/update`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -61,7 +62,7 @@ export default function OrderSummary() {
     const newQty = (quantities[menuId] || 0) - 1;
     if (newQty <= 0) {
       const token = await SecureStore.getItemAsync("token");
-      await fetch(`http://192.168.0.118:3001/api/cart/delete/${menuId}`, {
+      await fetch(`${BASE_URL}/api/cart/delete/${menuId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -142,7 +143,9 @@ export default function OrderSummary() {
               total === 0 && { opacity: 0.5 },
             ]}
             disabled={total === 0}
-            onPress={() => router.push("/Home")}
+            onPress={() =>
+              router.push({ pathname: "/Payment", params: { id } })
+            }
           >
             <Text style={ordersummarystyle.buttontext}>Confirm Order</Text>
           </TouchableOpacity>
