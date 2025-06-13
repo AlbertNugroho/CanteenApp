@@ -25,7 +25,7 @@ exports.getAvailableTimeslots = async (tenantId, date) => {
     const [bookedSlots] = await db.query(
       `SELECT timeslot, COUNT(*) as booked
        FROM transaksi 
-       WHERE id_tenant = ? AND DATE(transaction_date) = ?
+       WHERE id_tenant = ? AND DATE(transaction_date) = ? AND status != 'Cancelled '
        GROUP BY timeslot`,
       [tenantId, date]
     );
@@ -44,7 +44,7 @@ exports.getAvailableTimeslots = async (tenantId, date) => {
       const booked = bookedSlots.find(b => b.timeslot === slot.time)?.booked || 0;
       return {
         ...slot,
-        available: slotCapacity - booked,
+        available: Math.max(0, slotCapacity - booked),
         total: slotCapacity
       };
     });
@@ -62,90 +62,93 @@ exports.getAvailableTimeslots = async (tenantId, date) => {
  * @returns {Promise<Object>} Order details
  */
 exports.checkout = async (userId, tenantId, timeslot) => {
-  const connection = await db.getConnection();
-  
-  try {
-    await connection.beginTransaction();
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
 
-    // Get cart items
-    const [cartItems] = await connection.query(
-      `SELECT 
-        dc.id_menu,
-        m.nama_menu,
-        m.harga_menu,
-        dc.quantity
-      FROM cart c
-      JOIN detail_cart dc ON c.id_cart = dc.id_cart
-      JOIN menu m ON dc.id_menu = m.id_menu
-      WHERE c.id_user = ? AND c.id_tenant = ?
-      GROUP BY dc.id_menu`,
-      [userId, tenantId]
-    );
+        // Step 1: Get the user's cart for the specific tenant
+        const [cart] = await connection.query(
+            'SELECT id_cart FROM cart WHERE id_user = ? AND id_tenant = ?',
+            [userId, tenantId]
+        );
 
-    if (cartItems.length === 0) {
-      throw new Error('Cart is empty');
+        if (cart.length === 0) {
+            throw new Error('Cart for this tenant is empty or not found.');
+        }
+        const cartId = cart[0].id_cart;
+
+        // Step 2: Get all items from that cart
+        const [cartItems] = await connection.query(
+            `SELECT
+                dc.id_menu,
+                m.nama_menu,
+                m.harga_menu,
+                dc.quantity
+            FROM detail_cart dc
+            JOIN menu m ON dc.id_menu = m.id_menu
+            WHERE dc.id_cart = ?`,
+            [cartId]
+        );
+
+        if (cartItems.length === 0) {
+            throw new Error('No items in the cart to checkout.');
+        }
+
+        // Step 3: Calculate total amount
+        const totalAmount = cartItems.reduce((sum, item) => {
+            return sum + (item.harga_menu * item.quantity);
+        }, 0);
+
+        // Step 4: Create the main transaction record
+        const transactionDate = new Date();
+        const status = 'Pending ';
+        const formattedTimeslot = `${timeslot}:00`;
+        
+        await connection.query(
+            `INSERT INTO transaksi (id_user, id_tenant, transaction_date, timeslot, total_amount, status)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [userId, tenantId, transactionDate, formattedTimeslot, totalAmount, status]
+        );
+
+        // **THE FIX**: Instead of ordering by a potentially non-unique date,
+        // we find the HIGHEST transaction ID for that user/tenant.
+        // This assumes the trigger generates sequentially increasing IDs (e.g., T001, T002 or ...CEP, ...CEQ).
+        const [newTransaction] = await connection.query(
+            'SELECT MAX(id_transaksi) as id_transaksi FROM transaksi WHERE id_user = ? AND id_tenant = ?',
+            [userId, tenantId]
+        );
+
+        if (!newTransaction || newTransaction.length === 0 || !newTransaction[0].id_transaksi) {
+            throw new Error('Failed to create or retrieve transaction ID after insert.');
+        }
+        const actualTransactionId = newTransaction[0].id_transaksi;
+        
+        // Step 5: Create transaction details using the correct transaction ID
+        for (const item of cartItems) {
+            const subtotal = item.harga_menu * item.quantity;
+            await connection.query(
+                `INSERT INTO detail_transaksi (id_transaksi, id_menu, quantity, subtotal)
+                 VALUES (?, ?, ?, ?)`,
+                [actualTransactionId, item.id_menu, item.quantity, subtotal]
+            );
+        }
+        
+        await connection.query('DELETE FROM detail_cart WHERE id_cart = ?', [cartId]);
+        await connection.query('DELETE FROM cart WHERE id_cart = ?', [cartId]);
+        
+        await connection.commit();
+
+        return {
+            transactionId: actualTransactionId,
+            totalAmount
+        };
+    } catch (error) {
+        await connection.rollback();
+        console.error('Error in checkout service:', error);
+        throw error;
+    } finally {
+        connection.release();
     }
-
-    // Calculate total amount
-    const totalAmount = cartItems.reduce((sum, item) => {
-      const basePrice = item.harga_menu * item.quantity;
-      return sum + basePrice;
-    }, 0);
-
-    // Generate transaction ID
-    const transactionId = uuidv4();
-
-    // Create transaction header
-    await connection.query(
-      `INSERT INTO transaksi (
-        id_transaksi, 
-        id_user, 
-        id_tenant, 
-        tanggal,
-        timeslot,
-        total_amount, 
-        status
-      ) VALUES (?, ?, ?, NOW(), ?, ?, 'pending')`,
-      [transactionId, userId, tenantId, timeslot, totalAmount]
-    );
-
-    // Create transaction details
-    for (const item of cartItems) {
-      const itemNo = uuidv4();
-      const baseSubtotal = item.harga_menu * item.quantity;
-
-      // Insert main item
-      await connection.query(
-        `INSERT INTO detail_transaksi (
-          item_no,
-          id_transaksi,
-          id_menu,
-          quantity,
-          subtotal
-        ) VALUES (?, ?, ?, ?, ?)`,
-        [itemNo, transactionId, item.id_menu, item.quantity, baseSubtotal]
-      );
-    }
-
-    // Delete cart and its items
-    await connection.query(
-      'DELETE FROM cart WHERE id_user = ? AND id_tenant = ?',
-      [userId, tenantId]
-    );
-
-    await connection.commit();
-
-    return {
-      transactionId,
-      totalAmount
-    };
-  } catch (error) {
-    await connection.rollback();
-    console.error('Error in checkout service:', error);
-    throw error;
-  } finally {
-    connection.release();
-  }
 };
 
 
@@ -159,7 +162,7 @@ exports.getOrdersByTenantId = async (tenantId) => {
     const [orders] = await db.query(
       `SELECT 
         t.id_transaksi,
-        t.tanggal,
+        t.transaction_date,
         t.timeslot,
         t.total_amount,
         t.status,
@@ -167,13 +170,41 @@ exports.getOrdersByTenantId = async (tenantId) => {
       FROM transaksi t
       JOIN msuser u ON t.id_user = u.id_user
       WHERE t.id_tenant = ?
-      ORDER BY t.tanggal DESC`,
+      ORDER BY t.transaction_date DESC`,
       [tenantId]
     );
     return orders;
   } catch (error) {
     console.error('Error in getOrdersByTenantId service:', error);
     throw new Error('Failed to fetch tenant orders');
+  }
+};
+
+/**
+ * Get all orders for a specific user (customer)
+ * @param {string} userId - The ID of the user
+ * @returns {Promise<Array>} A list of orders for the user
+ */
+exports.getOrdersByUserId = async (userId) => {
+  try {
+    const [orders] = await db.query(
+      `SELECT 
+        t.id_transaksi,
+        t.transaction_date,
+        t.timeslot,
+        t.total_amount,
+        t.status,
+        ten.nama_tenant
+      FROM transaksi t
+      JOIN mstenant ten ON t.id_tenant = ten.id_tenant
+      WHERE t.id_user = ?
+      ORDER BY t.transaction_date DESC`,
+      [userId]
+    );
+    return orders;
+  } catch (error) {
+    console.error('Error in getOrdersByUserId service:', error);
+    throw new Error('Failed to fetch user orders');
   }
 };
 
@@ -200,37 +231,34 @@ exports.updateOrderStatus = async (transactionId, newStatus, userId, userRole) =
     }
 
     const transaction = transactions[0];
-    const currentStatus = transaction.status;
+    const currentStatus = transaction.status.trim();
+    const newStatusTrimmed = newStatus.trim();
+    const newStatusWithSpace = newStatusTrimmed + ' ';
 
-    // Permissions check
     if (userRole === 'customer') {
       if (transaction.id_user !== userId) {
         throw new Error('You are not authorized to update this order.');
       }
-      if (newStatus === 'Cancelled' && currentStatus === 'Pending') {
+      if (newStatusTrimmed === 'Cancelled' && currentStatus === 'Pending') {
         // Customer can cancel a pending order
       } else {
-        throw new Error('You can only cancel an order that is pending.');
+        throw new Error(`You can only cancel an order that is Pending. Current status: ${currentStatus}`);
       }
     } else if (userRole === 'seller') {
-      if (transaction.id_tenant !== userId) {
-        throw new Error('You are not authorized to update this order.');
-      }
       const allowedTransitions = {
         'Pending': ['On Process', 'Cancelled'],
         'On Process': ['Completed', 'Cancelled'],
       };
-      if (!allowedTransitions[currentStatus]?.includes(newStatus)) {
-        throw new Error(`Cannot change status from ${currentStatus} to ${newStatus}.`);
+      if (!allowedTransitions[currentStatus]?.includes(newStatusTrimmed)) {
+        throw new Error(`Cannot change status from ${currentStatus} to ${newStatusTrimmed}.`);
       }
     } else {
       throw new Error('Invalid user role.');
     }
 
-    // Update the status
     await connection.query(
       'UPDATE transaksi SET status = ? WHERE id_transaksi = ?',
-      [newStatus, transactionId]
+      [newStatusWithSpace, transactionId]
     );
 
     await connection.commit();
@@ -238,10 +266,11 @@ exports.updateOrderStatus = async (transactionId, newStatus, userId, userRole) =
     return {
       message: 'Order status updated successfully.',
       transactionId,
-      newStatus
+      newStatus: newStatusTrimmed
     };
   } catch (error) {
     await connection.rollback();
+    console.error('Error updating order status:', error.message);
     throw error;
   } finally {
     connection.release();
@@ -256,11 +285,10 @@ exports.updateOrderStatus = async (transactionId, newStatus, userId, userRole) =
  */
 exports.getOrderDetails = async (transactionId) => {
   try {
-    // Get transaction header
     const [transactions] = await db.query(
       `SELECT 
         t.id_transaksi,
-        t.tanggal,
+        t.transaction_date,
         t.timeslot,
         t.total_amount,
         t.status,
@@ -277,7 +305,6 @@ exports.getOrderDetails = async (transactionId) => {
       throw new Error('Transaction not found');
     }
 
-    // Get order items
     const [items] = await db.query(
       `SELECT 
         dt.item_no,
@@ -297,6 +324,6 @@ exports.getOrderDetails = async (transactionId) => {
     };
   } catch (error) {
     console.error('Error in getOrderDetails service:', error);
-    throw error;
+    throw new Error('Failed to fetch order details');
   }
 };
