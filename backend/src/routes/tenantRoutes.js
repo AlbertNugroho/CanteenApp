@@ -6,4 +6,4 @@ const { auth, sellerAuth } = require('../middleware/auth');
 // Update slot capacity (seller only)
 router.put('/slot-capacity', auth, sellerAuth, tenantController.updateSlotCapacity);
 
-module.exports = router; 
+module.exports = router;

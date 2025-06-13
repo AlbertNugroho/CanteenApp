@@ -154,3 +154,25 @@ exports.getOrderDetails = async (req, res) => {
     });
   }
 };
+
+/**
+ * Get all orders for the logged-in user (customer)
+ * @route GET /api/orders/my-orders
+ * @access Private (Customer only)
+ */
+exports.getOrdersByUser = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const orders = await orderService.getOrdersByUserId(userId);
+    res.json({
+      success: true,
+      data: orders
+    });
+  } catch (error) {
+    console.error('Error in getOrdersByUser controller:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch user orders'
+    });
+  }
+};

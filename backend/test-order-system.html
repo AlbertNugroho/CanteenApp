@@ -3,633 +3,324 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Order System</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <title>Order System Test</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 0 20px;
-        }
-        .section {
-            margin-bottom: 30px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .menu-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: #f5f5f5;
-            border-radius: 4px;
-        }
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: #e3f2fd;
-            border-radius: 4px;
-        }
-        .order-item {
-            padding: 10px;
-            margin: 5px 0;
-            background-color: #fff3e0;
-            border-radius: 4px;
-        }
-        .timeslot {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: #f5f5f5;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .timeslot:hover {
-            background-color: #e0e0e0;
-        }
-        .timeslot.selected {
-            background-color: #4CAF50;
-            color: white;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 5px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        button.remove {
-            background-color: #f44336;
-        }
-        button.remove:hover {
-            background-color: #da190b;
-        }
-        button.refresh {
-            background-color: #2196F3;
-            padding: 8px 15px;
-            font-size: 0.9em;
-        }
-        button.refresh:hover {
-            background-color: #1976D2;
-        }
-        .status-pending { background-color: #fff3e0; }
-        .status-processing { background-color: #e3f2fd; }
-        .status-completed { background-color: #e8f5e9; }
-        .status-cancelled { background-color: #ffebee; }
-        .flex-container {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-        }
-        .flex-item {
-            flex: 1;
-        }
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        .section-header h2 {
-            margin: 0;
-        }
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .response { background-color: #f0f0f0; padding: 10px; margin-top: 10px; white-space: pre-wrap; word-wrap: break-word; font-family: monospace; }
+        input, select, button { padding: 8px; margin-bottom: 10px; }
+        .cart-item, .order-item { border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; align-items: center; }
+        .item-actions button { font-size: 0.8em; padding: 4px 8px; margin-left: 5px; }
     </style>
 </head>
 <body>
+
+    <h1>Order System Test Page</h1>
+
+    <!-- SECTION 1: LOGIN -->
     <div class="section">
-        <h2>Login</h2>
-        <div>
-            <input type="text" id="email" placeholder="Email" value="user@example.com">
-            <input type="password" id="password" placeholder="Password" value="password">
-            <button onclick="login()">Login</button>
-            <span id="loginResponse"></span>
-        </div>
+        <h2>1. Login (as Customer)</h2>
+        <input type="email" id="email" placeholder="Email" value="test@example.com">
+        <input type="password" id="password" placeholder="Password" value="password">
+        <button onclick="login()">Login</button>
+        <div id="loginResponse" class="response" style="display:none;"></div>
     </div>
 
-    <div class="flex-container">
-        <div class="flex-item">
-            <div class="section">
-                <h2>Menu</h2>
-                <select id="tenantId" onchange="loadMenu()">
-                    <option value="">Select Tenant</option>
-                </select>
-                <div id="menuList"></div>
-                <div id="menuResponse"></div>
-            </div>
+    <!-- SECTION 2: CHOOSE TENANT AND MENU -->
+    <div class="section">
+        <h2>2. Choose Tenant and Menu</h2>
+        <p>Tenant: <select id="tenantSelect" onchange="fetchMenusForTenant()"></select></p>
+        <p>Menu: <select id="menuSelect"></select></p>
+        <p>Quantity: <input type="number" id="quantity" value="1" min="1"></p>
+        <button onclick="addToCart()">Add Selected Item to Cart</button>
+        <div id="cartResponse" class="response" style="display:none;"></div>
+    </div>
 
-            <div class="section">
-                <div class="section-header">
-                    <h2>Cart</h2>
-                    <button class="refresh" onclick="viewCart()">
-                        <i class="fas fa-sync-alt"></i> Refresh Cart
-                    </button>
-                </div>
-                <div id="cartItems"></div>
-                <div id="cartTotal"></div>
-                <div id="cartResponse"></div>
-            </div>
+    <!-- SECTION 3: VIEW CART -->
+    <div class="section">
+        <h2>3. View Cart</h2>
+        <button onclick="viewCart()">Refresh Cart</button>
+        <div id="viewCartResponse"></div>
+    </div>
 
-            <div class="section">
-                <h2>Place Order</h2>
-                <input type="date" id="date" value="" onchange="checkTimeslots()">
-                <div id="timeslots"></div>
-                <button onclick="placeOrder()">Place Order</button>
-                <div id="orderResponse"></div>
-            </div>
-        </div>
+    <!-- SECTION 4: MY ORDERS -->
+    <div class="section">
+        <h2>4. My Orders</h2>
+        <button onclick="fetchMyOrders()">Refresh My Orders</button>
+        <div id="myOrdersResponse"></div>
+    </div>
 
-        <div class="flex-item">
-            <div class="section">
-                <h2>My Orders</h2>
-                <button onclick="loadOrders()">Refresh Orders</button>
-                <div id="orderList"></div>
-            </div>
-        </div>
+    <!-- SECTION 5: GET AVAILABLE TIMESLOTS & PLACE ORDER -->
+    <div class="section">
+        <h2>5. Place Order</h2>
+        <p>Select a date and available timeslot below to place your order.</p>
+        <p>Date: <input type="date" id="orderDate"></p>
+        <button onclick="getAvailableTimeslots()">Get Timeslots</button>
+        <div id="slotsResponse" class="response" style="display:none;"></div>
+        <div id="timeslotSelection"></div>
+        <button onclick="placeOrder()" style="margin-top: 15px;">Place Order with Selected Timeslot</button>
+        <div id="orderResponse" class="response" style="display:none;"></div>
     </div>
 
     <script>
-        let token = localStorage.getItem('token');
-        let selectedTimeslot = null;
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('date').value = today;
+        const API_URL = 'http://localhost:3001/api';
+        let token = null;
+
+        window.onload = function() {
+            document.getElementById('orderDate').valueAsDate = new Date();
+            fetchAllTenants();
+        };
+
+        async function fetchAllTenants() {
+            const tenantSelect = document.getElementById('tenantSelect');
+            try {
+                const res = await fetch(`${API_URL}/canteens`);
+                const data = await res.json();
+                if (data.success) {
+                    tenantSelect.innerHTML = '';
+                    data.data.forEach(tenant => {
+                        tenantSelect.add(new Option(tenant.nama_tenant, tenant.id_tenant));
+                    });
+                    fetchMenusForTenant();
+                } else {
+                    tenantSelect.innerHTML = '<option>Failed to load tenants</option>';
+                }
+            } catch (error) {
+                console.error("Failed to fetch tenants", error);
+            }
+        }
+
+        async function fetchMenusForTenant() {
+            const tenantId = document.getElementById('tenantSelect').value;
+            const menuSelect = document.getElementById('menuSelect');
+            if (!tenantId) { menuSelect.innerHTML = ''; return; }
+            try {
+                const res = await fetch(`${API_URL}/menus/tenants/${tenantId}`);
+                const data = await res.json();
+                menuSelect.innerHTML = '';
+                if (data.success) {
+                    data.data.forEach(menu => {
+                        if (menu.availability === 1) {
+                            menuSelect.add(new Option(`${menu.nama_menu} - Rp${menu.harga_menu}`, menu.id_menu));
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to fetch menu", error);
+            }
+        }
 
         async function login() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-
+            const responseEl = document.getElementById('loginResponse');
             try {
-                const response = await fetch('http://localhost:3001/api/auth/login', {
+                const res = await fetch(`${API_URL}/auth/login`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
-
-                const data = await response.json();
-                console.log('Login response:', data);
-                
+                const data = await res.json();
+                responseEl.textContent = JSON.stringify(data, null, 2);
+                responseEl.style.display = 'block';
                 if (data.success) {
                     token = data.data.token;
-                    localStorage.setItem('token', token);
-                    document.getElementById('loginResponse').innerHTML = 'Logged in successfully!';
-                    loadTenants();
-                } else {
-                    document.getElementById('loginResponse').innerHTML = 'Error: ' + data.message;
+                    viewCart(); // Show cart on login
+                    fetchMyOrders(); // Show orders on login
                 }
             } catch (error) {
-                console.error('Login error:', error);
-                document.getElementById('loginResponse').innerHTML = 'Error: ' + error.message;
+                responseEl.textContent = 'Error: ' + error;
             }
         }
 
-        // Check if we have a stored token on page load
-        window.onload = function() {
-            const storedToken = localStorage.getItem('token');
-            if (storedToken) {
-                token = storedToken;
-                loadTenants();
-                document.getElementById('loginResponse').innerHTML = 'Using stored login session';
-            }
-        };
-
-        async function loadTenants() {
+        async function addToCart() {
+            if (!token) { alert('Please login first'); return; }
+            const tenantId = document.getElementById('tenantSelect').value;
+            const menuId = document.getElementById('menuSelect').value;
+            const quantity = parseInt(document.getElementById('quantity').value);
+            if (!tenantId || !menuId) { alert("Please select a tenant and menu item."); return; }
             try {
-                console.log('Loading tenants, token:', token ? 'present' : 'missing');
-                const response = await fetch('http://localhost:3001/api/canteens', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                const data = await response.json();
-                console.log('Tenants response:', data);
-
-                if (data.success) {
-                    const select = document.getElementById('tenantId');
-                    select.innerHTML = '<option value="">Select Tenant</option>';
-                    
-                    data.data.forEach(tenant => {
-                        const option = document.createElement('option');
-                        option.value = tenant.id_tenant;
-                        option.textContent = tenant.nama_tenant;
-                        select.appendChild(option);
-                    });
-                } else {
-                    console.error('Failed to load tenants:', data.message);
-                }
-            } catch (error) {
-                console.error('Error loading tenants:', error);
-            }
-        }
-
-        async function loadMenu() {
-            const tenantId = document.getElementById('tenantId').value;
-            if (!tenantId) return;
-
-            try {
-                console.log('Loading menu for tenant:', tenantId);
-                const response = await fetch(`http://localhost:3001/api/menus/tenants/${tenantId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                const data = await response.json();
-                console.log('Menu response:', data);
-
-                if (data.success) {
-                    const menuList = document.getElementById('menuList');
-                    menuList.innerHTML = '';
-
-                    data.data.forEach(item => {
-                        const div = document.createElement('div');
-                        div.className = 'menu-item';
-                        
-                        div.innerHTML = `
-                            <div>
-                                <strong>${item.nama_menu}</strong><br>
-                                Rp ${item.harga_menu}<br>
-                                <small>Status: ${item.availability}</small>
-                            </div>
-                            <div>
-                                <input type="number" id="qty-${item.id_menu}" value="1" min="1" style="width: 60px;">
-                                <button onclick="addToCart('${item.id_menu}')" 
-                                        ${item.availability === 'Out of Stock' ? 'disabled' : ''}>
-                                    ${item.availability === 'Out of Stock' ? 'Out of Stock' : 'Add to Cart'}
-                                </button>
-                            </div>
-                        `;
-                        menuList.appendChild(div);
-                    });
-                } else {
-                    document.getElementById('menuResponse').innerHTML = 'Error: ' + data.message;
-                }
-            } catch (error) {
-                console.error('Error loading menu:', error);
-                document.getElementById('menuResponse').innerHTML = 'Error: ' + error.message;
-            }
-        }
-
-        async function addToCart(menuId) {
-            if (!token) {
-                document.getElementById('menuResponse').innerHTML = 'Please login first';
-                return;
-            }
-
-            const tenantId = document.getElementById('tenantId').value;
-            const quantity = parseInt(document.getElementById(`qty-${menuId}`).value);
-
-            try {
-                document.getElementById('menuResponse').innerHTML = 'Adding to cart...';
-                console.log('Adding to cart:', { menuId, tenantId, quantity });
-                
-                const response = await fetch('http://localhost:3001/api/cart/add', {
+                await fetch(`${API_URL}/cart/add`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        menuId,
-                        tenantId,
-                        quantity
-                    })
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ tenantId, menuId, quantity })
                 });
-
-                const data = await response.json();
-                console.log('Add to cart response:', data);
-                
-                if (data.success) {
-                    document.getElementById('menuResponse').innerHTML = 'Item added to cart successfully!';
-                    
-                    // Immediately try to fetch the updated cart
-                    console.log('Fetching updated cart...');
-                    const cartResponse = await fetch('http://localhost:3001/api/cart', {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-                    
-                    const cartData = await cartResponse.json();
-                    console.log('Updated cart data:', cartData);
-                    
-                    if (cartData.success) {
-                        updateCartDisplay(cartData.data);
-                    } else {
-                        console.error('Failed to fetch updated cart:', cartData.message);
-                    }
-                } else {
-                    document.getElementById('menuResponse').innerHTML = 'Error: ' + data.message;
-                }
+                viewCart(); // Refresh cart view after adding
             } catch (error) {
-                console.error('Error adding to cart:', error);
-                document.getElementById('menuResponse').innerHTML = 'Error: ' + error.message;
+                console.error('Add to cart error:', error);
             }
-        }
-
-        function updateCartDisplay(cartItems) {
-            const cartContainer = document.getElementById('cartItems');
-            const cartTotal = document.getElementById('cartTotal');
-            cartContainer.innerHTML = '';
-            
-            console.log('Updating cart display with items:', cartItems);
-            
-            if (!cartItems || cartItems.length === 0) {
-                cartContainer.innerHTML = '<div class="cart-item">Your cart is empty</div>';
-                cartTotal.innerHTML = '<strong>Total: Rp 0</strong>';
-                return;
-            }
-            
-            let total = 0;
-            cartItems.forEach(item => {
-                if (!item) return;
-                
-                const div = document.createElement('div');
-                div.className = 'cart-item';
-                
-                const itemTotal = item.quantity * item.harga_menu;
-                total += itemTotal;
-
-                div.innerHTML = `
-                    <div>
-                        <strong>${item.nama_menu}</strong><br>
-                        ${item.quantity} × Rp ${item.harga_menu} = Rp ${itemTotal}
-                    </div>
-                    <div>
-                        <button onclick="updateCartItem('${item.id_menu}', ${item.quantity - 1})">-</button>
-                        <span>${item.quantity}</span>
-                        <button onclick="updateCartItem('${item.id_menu}', ${item.quantity + 1})">+</button>
-                        <button class="remove" onclick="deleteCartItem('${item.id_menu}')">Remove</button>
-                    </div>
-                `;
-                cartContainer.appendChild(div);
-            });
-
-            cartTotal.innerHTML = `<strong>Total: Rp ${total}</strong>`;
         }
 
         async function viewCart() {
-            if (!token) {
-                document.getElementById('cartResponse').innerHTML = 'Please login first';
-                return;
-            }
-
+            if (!token) return;
+            const tenantId = document.getElementById('tenantSelect').value;
+            const cartDiv = document.getElementById('viewCartResponse');
+            if (!tenantId) { cartDiv.innerHTML = '<p>Please select a tenant.</p>'; return; }
             try {
-                console.log('Fetching cart...');
-                const response = await fetch('http://localhost:3001/api/cart', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                const res = await fetch(`${API_URL}/cart/${tenantId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-
-                const data = await response.json();
-                console.log('Cart response:', data);
-                
-                if (data.success) {
-                    updateCartDisplay(data.data);
-                    document.getElementById('cartResponse').innerHTML = '';
-                } else {
-                    document.getElementById('cartResponse').innerHTML = 'Error: ' + data.message;
-                }
-            } catch (error) {
-                console.error('Error fetching cart:', error);
-                document.getElementById('cartResponse').innerHTML = 'Error: ' + error.message;
-            }
-        }
-
-        async function updateCartItem(menuId, newQuantity) {
-            if (!token) {
-                document.getElementById('cartResponse').innerHTML = 'Please login first';
-                return;
-            }
-
-            try {
-                const response = await fetch('http://localhost:3001/api/cart/update', {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        menuId,
-                        quantity: newQuantity
-                    })
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    viewCart();
-                } else {
-                    document.getElementById('cartResponse').innerHTML = 'Error: ' + data.message;
-                }
-            } catch (error) {
-                document.getElementById('cartResponse').innerHTML = 'Error: ' + error.message;
-            }
-        }
-
-        async function deleteCartItem(menuId) {
-            if (!token) {
-                document.getElementById('cartResponse').innerHTML = 'Please login first';
-                return;
-            }
-
-            try {
-                const response = await fetch(`http://localhost:3001/api/cart/delete/${menuId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    viewCart();
-                } else {
-                    document.getElementById('cartResponse').innerHTML = 'Error: ' + data.message;
-                }
-            } catch (error) {
-                document.getElementById('cartResponse').innerHTML = 'Error: ' + error.message;
-            }
-        }
-
-        async function checkTimeslots() {
-            const tenantId = document.getElementById('tenantId').value;
-            const date = document.getElementById('date').value;
-
-            try {
-                const response = await fetch(
-                    `http://localhost:3001/api/orders/timeslots/${tenantId}?date=${date}`
-                );
-                const data = await response.json();
-
-                if (data.success) {
-                    const timeslotsDiv = document.getElementById('timeslots');
-                    timeslotsDiv.innerHTML = '';
-
-                    data.data.forEach(slot => {
-                        const div = document.createElement('div');
-                        div.className = 'timeslot';
-                        div.innerHTML = `
-                            <span>${slot.time} - ${slot.endTime}</span>
-                            <span>Available: ${slot.available}/${slot.total}</span>
+                const data = await res.json();
+                cartDiv.innerHTML = '';
+                if (data.success && data.data.length > 0) {
+                    let total = 0;
+                    data.data.forEach(item => {
+                        total += item.harga_menu * item.quantity;
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'cart-item';
+                        itemDiv.innerHTML = `
+                            <span>${item.nama_menu} (x${item.quantity}) - Rp${item.harga_menu * item.quantity}</span>
+                            <span class="item-actions">
+                                <button onclick="updateCartItemQuantity('${item.id_menu}', ${item.quantity + 1})">+</button>
+                                <button onclick="updateCartItemQuantity('${item.id_menu}', ${item.quantity - 1})">-</button>
+                                <button onclick="removeCartItem('${item.id_menu}')">Remove</button>
+                            </span>
                         `;
-                        div.onclick = () => selectTimeslot(slot.time, div);
-                        timeslotsDiv.appendChild(div);
+                        cartDiv.appendChild(itemDiv);
+                    });
+                    cartDiv.innerHTML += `<p><strong>Total: Rp${total}</strong></p>`;
+                } else {
+                    cartDiv.innerHTML = '<p>Your cart for this tenant is empty.</p>';
+                }
+            } catch (error) {
+                console.error('View cart error:', error);
+                cartDiv.innerHTML = '<p>Error loading cart.</p>';
+            }
+        }
+
+        async function updateCartItemQuantity(menuId, newQuantity) {
+            if (!token) return;
+            try {
+                await fetch(`${API_URL}/cart/update`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ menuId, quantity: newQuantity })
+                });
+                viewCart(); // Refresh cart view
+            } catch (error) {
+                console.error("Update quantity error:", error);
+            }
+        }
+
+        async function removeCartItem(menuId) {
+            if (!token) return;
+            try {
+                await fetch(`${API_URL}/cart/delete/${menuId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                viewCart(); // Refresh cart view
+            } catch (error) {
+                console.error("Remove item error:", error);
+            }
+        }
+
+        async function fetchMyOrders() {
+            if (!token) return;
+            const ordersDiv = document.getElementById('myOrdersResponse');
+            try {
+                const res = await fetch(`${API_URL}/orders/my-orders`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                ordersDiv.innerHTML = '';
+                if (data.success && data.data.length > 0) {
+                    data.data.forEach(order => {
+                        const statusTrimmed = order.status.trim();
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'order-item';
+                        itemDiv.innerHTML = `
+                            <span>
+                                <strong>${order.nama_tenant}</strong> - #${order.id_transaksi.substring(0, 8)}<br>
+                                <small>${new Date(order.transaction_date).toLocaleString()} - Status: ${statusTrimmed}</small>
+                            </span>
+                            ${statusTrimmed === 'Pending' ? `<button onclick="cancelOrder('${order.id_transaksi}')">Cancel</button>` : ''}
+                        `;
+                        ordersDiv.appendChild(itemDiv);
                     });
                 } else {
-                    document.getElementById('timeslots').innerHTML = 'Error: ' + data.message;
+                    ordersDiv.innerHTML = '<p>You have no orders.</p>';
                 }
             } catch (error) {
-                document.getElementById('timeslots').innerHTML = 'Error: ' + error.message;
+                console.error("Fetch orders error:", error);
+                ordersDiv.innerHTML = '<p>Error loading orders.</p>';
             }
         }
 
-        function selectTimeslot(time, element) {
-            document.querySelectorAll('.timeslot').forEach(slot => {
-                slot.classList.remove('selected');
-            });
-            element.classList.add('selected');
-            selectedTimeslot = time;
+        async function cancelOrder(transactionId) {
+            if (!token) return;
+            if (!confirm('Are you sure you want to cancel this order?')) return;
+            try {
+                const res = await fetch(`${API_URL}/orders/${transactionId}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ status: 'Cancelled' })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    fetchMyOrders();
+                } else {
+                    alert('Error cancelling order: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Cancel order error:', error);
+            }
+        }
+        
+        async function getAvailableTimeslots() {
+            const tenantId = document.getElementById('tenantSelect').value;
+            const date = document.getElementById('orderDate').value;
+            const slotsResponseEl = document.getElementById('slotsResponse');
+            const timeslotSelectionEl = document.getElementById('timeslotSelection');
+            if (!tenantId || !date) { alert('Please select a tenant and a date.'); return; }
+            try {
+                const res = await fetch(`${API_URL}/orders/timeslots/${tenantId}?date=${date}`);
+                const data = await res.json();
+                slotsResponseEl.textContent = JSON.stringify(data, null, 2);
+                slotsResponseEl.style.display = 'block';
+                timeslotSelectionEl.innerHTML = '<h4>Select a Timeslot:</h4>';
+                if (data.success && data.data.length > 0) {
+                    data.data.forEach(slot => {
+                        const isAvailable = slot.available > 0;
+                        timeslotSelectionEl.innerHTML += `
+                            <div>
+                                <input type="radio" id="slot-${slot.time}" name="timeslot" value="${slot.time}" ${!isAvailable ? 'disabled' : ''}>
+                                <label for="slot-${slot.time}">${slot.time} - ${slot.endTime} (Available: ${slot.available}/${slot.total})</label>
+                            </div>
+                        `;
+                    });
+                } else {
+                    timeslotSelectionEl.innerHTML += '<p>No available timeslots for this date.</p>';
+                }
+            } catch (error) {
+                slotsResponseEl.textContent = 'Error: ' + error;
+                slotsResponseEl.style.display = 'block';
+            }
         }
 
         async function placeOrder() {
-            if (!token) {
-                document.getElementById('orderResponse').innerHTML = 'Please login first';
-                return;
-            }
-
-            if (!selectedTimeslot) {
-                document.getElementById('orderResponse').innerHTML = 'Please select a timeslot first';
-                return;
-            }
-
-            const tenantId = document.getElementById('tenantId').value;
-
+            if (!token) { alert('Please login first'); return; }
+            const tenantId = document.getElementById('tenantSelect').value;
+            const selectedTimeslot = document.querySelector('input[name="timeslot"]:checked');
+            if (!tenantId) { alert("Please select a tenant."); return; }
+            if (!selectedTimeslot) { alert('Please fetch and select an available timeslot first.'); return; }
             try {
-                const response = await fetch('http://localhost:3001/api/orders/checkout', {
+                const res = await fetch(`${API_URL}/orders/checkout`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        tenantId,
-                        timeslot: selectedTimeslot
-                    })
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ tenantId, timeslot: selectedTimeslot.value })
                 });
-
-                const data = await response.json();
-                if (data.success) {
-                    document.getElementById('orderResponse').innerHTML = 
-                        `Order placed successfully! Transaction ID: ${data.data.transactionId}`;
-                    viewCart();
-                    loadOrders();
+                const data = await res.json();
+                if(data.success) {
+                    alert('Order placed successfully!');
+                    viewCart(); // Clear cart view
+                    fetchMyOrders(); // Refresh orders
                 } else {
-                    document.getElementById('orderResponse').innerHTML = 'Error: ' + data.message;
+                    alert('Error placing order: ' + data.message);
                 }
             } catch (error) {
-                document.getElementById('orderResponse').innerHTML = 'Error: ' + error.message;
+                console.error("Place order error:", error);
             }
-        }
-
-        async function loadOrders() {
-            if (!token) {
-                document.getElementById('orderList').innerHTML = 'Please login first';
-                return;
-            }
-
-            try {
-                const response = await fetch('http://localhost:3001/api/orders', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    const orderList = document.getElementById('orderList');
-                    orderList.innerHTML = '';
-
-                    data.data.forEach(order => {
-                        const div = document.createElement('div');
-                        div.className = `order-item status-${order.status.toLowerCase()}`;
-                        
-                        let itemsHtml = order.items.map(item => `
-                            <div>
-                                ${item.nama_menu} x ${item.quantity}
-                            </div>
-                        `).join('');
-
-                        div.innerHTML = `
-                            <h3>Order #${order.id_transaksi}</h3>
-                            <p>Status: ${order.status}</p>
-                            <p>Total: Rp ${order.total_amount}</p>
-                            <p>Pickup Time: ${order.timeslot}</p>
-                            <div class="order-items">${itemsHtml}</div>
-                            ${order.status === 'Pending' ? `
-                                <button onclick="updateOrderStatus('${order.id_transaksi}', 'Cancelled')">
-                                    Cancel Order
-                                </button>
-                            ` : ''}
-                        `;
-                        orderList.appendChild(div);
-                    });
-                } else {
-                    document.getElementById('orderList').innerHTML = 'Error: ' + data.message;
-                }
-            } catch (error) {
-                document.getElementById('orderList').innerHTML = 'Error: ' + error.message;
-            }
-        }
-
-        async function updateOrderStatus(transactionId, newStatus) {
-            if (!token) {
-                alert('Please login first');
-                return;
-            }
-
-            try {
-                const response = await fetch(`http://localhost:3001/api/orders/${transactionId}/status`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ status: newStatus })
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    loadOrders();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-        }
-
-        // Initialize
-        if (token) {
-            loadTenants();
         }
     </script>
 </body>
