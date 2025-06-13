@@ -33,4 +33,4 @@ exports.updateSlotCapacity = async (tenantId, slotPerTime) => {
     console.error('Error in updateSlotCapacity:', error);
     throw error;
   }
-}; 
+};

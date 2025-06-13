@@ -31,4 +31,4 @@ exports.updateSlotCapacity = async (req, res) => {
       message: error.message || 'Failed to update slot capacity'
     });
   }
-}; 
+};

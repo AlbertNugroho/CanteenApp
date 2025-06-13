@@ -2,14 +2,15 @@ const cartService = require('../services/cartService');
 
 /**
  * Get cart items for the authenticated user
- * @route GET /api/cart
+ * @route GET /api/cart/:tenantId
  * @access Private
  */
 exports.getCart = async (req, res) => {
   try {
     const userId = req.user.id;
-    const cartItems = await cartService.getCartItems(userId);
-    
+    const { tenantId } = req.params; // Get tenantId from route parameter
+    const cartItems = await cartService.getCartItems(userId, tenantId);
+
     res.json({
       success: true,
       data: cartItems
@@ -41,7 +42,7 @@ exports.addToCart = async (req, res) => {
     }
 
     const result = await cartService.addToCart(userId, menuId, tenantId, quantity, addons);
-    
+
     res.status(201).json({
       success: true,
       message: 'Item added to cart successfully',
@@ -74,7 +75,7 @@ exports.updateCartItem = async (req, res) => {
     }
 
     const result = await cartService.updateCartItem(userId, menuId, quantity);
-    
+
     res.json({
       success: true,
       message: 'Cart item updated successfully',
@@ -100,7 +101,7 @@ exports.deleteCartItem = async (req, res) => {
     const { menuId } = req.params;
 
     await cartService.deleteCartItem(userId, menuId);
-    
+
     res.json({
       success: true,
       message: 'Cart item deleted successfully'
@@ -112,4 +113,4 @@ exports.deleteCartItem = async (req, res) => {
       message: error.message || 'Failed to delete cart item'
     });
   }
-}; 
+};

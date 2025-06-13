@@ -7,30 +7,21 @@ const db = require('../config/db');
  */
 exports.getMenusByTenantId = async (tenantId) => {
   try {
-    // Get menu items
     const [menuItems] = await db.query(
       `SELECT 
         id_menu,
         nama_menu,
         harga_menu,
         gambar_menu,
-        IF(availability = 1, 'Available', 'Out of Stock') as availability,
+        availability,
         id_tenant
       FROM menu 
       WHERE id_tenant = ?`,
       [tenantId]
     );
-
-    console.log('Menu items found:', menuItems.length);
     return menuItems;
   } catch (error) {
-    console.error('Detailed error in getMenusByTenantId service:', {
-      message: error.message,
-      code: error.code,
-      sqlState: error.sqlState,
-      sqlMessage: error.sqlMessage
-    });
-    throw error; // Throw the original error to preserve details
+    throw error;
   }
 };
 
@@ -40,7 +31,6 @@ exports.getMenusByTenantId = async (tenantId) => {
  */
 exports.getAllMenus = async () => {
   try {
-    // Get all menu items
     const [menuItems] = await db.query(
       `SELECT 
         m.id_menu,
@@ -53,16 +43,9 @@ exports.getAllMenus = async () => {
       FROM menu m
       JOIN mstenant t ON m.id_tenant = t.id_tenant`
     );
-
     return menuItems;
   } catch (error) {
-    console.error('Detailed error in getAllMenus service:', {
-      message: error.message,
-      code: error.code,
-      sqlState: error.sqlState,
-      sqlMessage: error.sqlMessage
-    });
-    throw error; // Throw the original error to preserve details
+    throw error;
   }
 };
 
@@ -73,12 +56,11 @@ exports.getAllMenus = async () => {
  */
 exports.getMenuById = async (menuId) => {
   try {
-    // Get menu item
     const [menuItems] = await db.query(
       `SELECT 
         id_menu,
         nama_menu,
-        deskripsi_menu,
+        deskripsi,
         harga_menu,
         gambar_menu,
         availability,
@@ -87,14 +69,53 @@ exports.getMenuById = async (menuId) => {
       WHERE id_menu = ?`,
       [menuId]
     );
-
     if (menuItems.length === 0) {
       throw new Error('Menu item not found');
     }
-
     return menuItems[0];
   } catch (error) {
-    console.error('Error in getMenuById service:', error);
     throw error;
   }
-}; 
+};
+
+/**
+ * Add a new menu item for a specific tenant
+ * @param {Object} menuData - Contains name, description, price
+ * @param {string} tenantId - The tenant's ID
+ * @returns {Promise<Object>} The newly created menu item
+ */
+exports.addMenuItem = async (menuData, tenantId) => {
+    const { name, description, price } = menuData;
+    const [result] = await db.query(
+      'INSERT INTO menu (nama_menu, deskripsi, harga_menu, id_tenant, availability) VALUES (?, ?, ?, ?, 1)',
+      [name, description, price, tenantId]
+    );
+    if (result.affectedRows === 0) {
+      throw new Error('Failed to add menu item');
+    }
+    const [newMenu] = await db.query(
+      'SELECT * FROM menu WHERE id_tenant = ? AND nama_menu = ? ORDER BY id_menu DESC LIMIT 1',
+      [tenantId, name]
+    );
+    return newMenu[0];
+};
+
+/**
+ * Update a menu item's availability
+ * @param {string} menuId - The ID of the menu item to update
+ * @param {number} availability - The new availability status (1 for available, 0 for not)
+ * @param {string} tenantId - The ID of the tenant making the request (for authorization)
+ * @returns {Promise<Object>} The result of the update operation
+ */
+exports.updateMenuAvailability = async (menuId, availability, tenantId) => {
+    const [result] = await db.query(
+        'UPDATE menu SET availability = ? WHERE id_menu = ? AND id_tenant = ?',
+        [availability, menuId, tenantId]
+    );
+
+    if (result.affectedRows === 0) {
+        throw new Error('Menu item not found or you do not have permission to update it.');
+    }
+
+    return { message: 'Availability updated successfully.' };
+};
