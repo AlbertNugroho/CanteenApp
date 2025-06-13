@@ -175,9 +175,9 @@ exports.updateCartItem = async (userId, menuId, quantity) => {
       throw new Error('This item is out of stock');
     }
 
-    // if (quantity > menuItem[0].availability) {
-    //   throw new Error(`Cannot update quantity to ${quantity}. Only ${menuItem[0].availability} available`);
-    // }
+    if (quantity > menuItem[0].availability) {
+      throw new Error(`Cannot update quantity to ${quantity}. Only ${menuItem[0].availability} available`);
+    }
 
     // Get cart ID
     const [cart] = await connection.query(
