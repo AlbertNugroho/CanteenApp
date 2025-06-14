@@ -24,6 +24,17 @@ const Home = () => {
   const [loadingTopPicks, setLoadingTopPicks] = useState(true);
   const [loadingPromo, setLoadingPromo] = useState(true);
   const [loadingVendors, setLoadingVendors] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearchSubmit = () => {
+    if (searchQuery.trim().length > 0) {
+      router.push({
+        pathname: "/SearchVendors",
+        params: { q: searchQuery.trim() },
+      });
+      setSearchQuery("");
+    }
+  };
 
   useEffect(() => {
     const fetchVendors = async () => {
@@ -64,7 +75,11 @@ const Home = () => {
       >
         <Image
           style={homestyle.promoFoodsImg}
-          source={{ uri: item.image || "https://via.placeholder.com/100" }}
+          source={
+            item.image && item.image.trim() !== ""
+              ? { uri: item.image }
+              : require("../../assets/images/Banner.png")
+          }
         />
         <View style={homestyle.promoFoodsTextContainer}>
           <Text style={homestyle.promoFoodsText}>{item.nama_tenant}</Text>
@@ -95,7 +110,11 @@ const Home = () => {
       >
         <Image
           style={homestyle.promoFoodsImg}
-          source={{ uri: item.image || "https://via.placeholder.com/100" }}
+          source={
+            item.image && item.image.trim() !== ""
+              ? { uri: item.image }
+              : require("../../assets/images/Banner.png")
+          }
         />
         <View style={homestyle.VendorsTextContainer}>
           <Text style={homestyle.promoFoodsText}>{item.nama_tenant}</Text>
@@ -136,7 +155,7 @@ const Home = () => {
             </TouchableOpacity>
             <Image
               style={homestyle.pp}
-              source={require("../../assets/images/cardprofile.png")}
+              source={require("../../assets/images/LavaChicken.png")}
             />
           </View>
           <Image
@@ -148,7 +167,14 @@ const Home = () => {
         {/* Search */}
         <View style={homestyle.searchcontainer}>
           <Image source={require("../../assets/images/Search.png")} />
-          <TextInput placeholder="What food is on your mind?" />
+          <TextInput
+            placeholder="What food is on your mind?"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onSubmitEditing={handleSearchSubmit}
+            returnKeyType="search"
+            style={{ flex: 1, marginLeft: 10 }}
+          />
         </View>
 
         {/* Top Picks */}

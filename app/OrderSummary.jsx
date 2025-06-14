@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import ordersummarystyle from "../styles/ordersummarystyle";
 import BASE_URL from "../utils/config";
+import DropDownPicker from "react-native-dropdown-picker";
 
 export default function OrderSummary() {
   const router = useRouter();
@@ -11,6 +12,11 @@ export default function OrderSummary() {
   const [vendorMenus, setVendorMenus] = useState([]);
   const [quantities, setQuantities] = useState({});
   const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(null);
+  const [timeslots, setTimeslots] = useState([]);
+  const [selectedTimeslot, setSelectedTimeslot] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownItems, setDropdownItems] = useState([]);
 
   useEffect(() => {
     (async () => {
@@ -18,7 +24,7 @@ export default function OrderSummary() {
         const token = await SecureStore.getItemAsync("token");
         const [menusRes, cartRes] = await Promise.all([
           fetch(`${BASE_URL}/api/menus/tenants/${id}`),
-          fetch(`${BASE_URL}/api/cart`, {
+          fetch(`${BASE_URL}/api/cart/${id}`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -30,7 +36,7 @@ export default function OrderSummary() {
         setVendorMenus(menus);
         const initQty = {};
         cartItems.forEach((c) => {
-          initQty[c.id_menu] = c.quantity;
+          initQty[String(c.id_menu)] = c.quantity;
         });
         setQuantities(initQty);
         setLoading(false);
@@ -39,6 +45,72 @@ export default function OrderSummary() {
       }
     })();
   }, [id]);
+  useEffect(() => {
+    (async () => {
+      try {
+        const t = await SecureStore.getItemAsync("token");
+        setToken(t);
+
+        const [menusRes, cartRes, slotsRes] = await Promise.all([
+          fetch(`${BASE_URL}/api/menus/tenants/${id}`),
+          fetch(`${BASE_URL}/api/cart/${id}`, {
+            headers: { Authorization: `Bearer ${t}` },
+          }),
+          fetch(
+            `${BASE_URL}/api/orders/timeslots/${id}?date=${
+              new Date().toISOString().split("T")[0]
+            }`
+          ),
+        ]);
+
+        const menus = (await menusRes.json()).data;
+        const cartItems = (await cartRes.json()).data;
+        const slotData = (await slotsRes.json()).data;
+
+        const initQty = {};
+        cartItems.forEach((c) => {
+          initQty[String(c.id_menu)] = c.quantity;
+        });
+
+        setQuantities(initQty);
+        setVendorMenus(menus);
+        setTimeslots(slotData);
+        setDropdownItems(
+          slotData.map((slot) => ({
+            label: `${slot.time} - ${slot.endTime} (Available: ${slot.available})`,
+            value: slot.time,
+            disabled: slot.available === 0,
+          }))
+        );
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching data", err);
+      }
+    })();
+  }, [id]);
+
+  const handlePlaceOrder = async () => {
+    if (!token) return alert("Please login first");
+    if (!selectedTimeslot) return alert("Please select a timeslot");
+
+    try {
+      const res = await fetch(`${BASE_URL}/api/orders/checkout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ tenantId: id, timeslot: selectedTimeslot }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        router.replace({ pathname: "/Payment", params: { id } });
+      }
+    } catch (error) {
+      console.error("Place order error:", error);
+    }
+  };
 
   const updateCartItem = async (menuId, newQty) => {
     const token = await SecureStore.getItemAsync("token");
@@ -116,12 +188,39 @@ export default function OrderSummary() {
               </View>
             </View>
             <Image
-              source={{ uri: menu.gambar_menu }}
-              style={{ width: 80, height: 80, borderRadius: 8 }}
+              source={
+                menu.gambar_menu && menu.gambar_menu.trim() !== ""
+                  ? { uri: menu.gambar_menu }
+                  : require("../assets/images/Banner.png")
+              }
+              style={{ width: 100, height: 100, borderRadius: 8 }}
             />
           </View>
         ))}
-
+        <Text style={ordersummarystyle.Text}>Select Timeslot</Text>
+        <DropDownPicker
+          open={dropdownOpen}
+          value={selectedTimeslot}
+          items={dropdownItems}
+          setOpen={setDropdownOpen}
+          setValue={setSelectedTimeslot}
+          setItems={setDropdownItems}
+          showTickIcon={false}
+          placeholder="Choose a timeslot"
+          style={{
+            fontFamily: "Calibri",
+            height: 45,
+            borderColor: "#000",
+            borderRadius: 8,
+          }}
+          textStyle={{ fontFamily: "Calibri", fontSize: 14, color: "#000" }}
+          dropDownContainerStyle={{
+            borderColor: "#000",
+            borderRadius: 8,
+          }}
+          containerStyle={{ marginBottom: 16 }}
+          zIndex={1000}
+        />
         <Text style={ordersummarystyle.Text}>Payment Summary</Text>
         <View style={ordersummarystyle.ordercontainer}>
           {[
@@ -140,12 +239,10 @@ export default function OrderSummary() {
           <TouchableOpacity
             style={[
               ordersummarystyle.orderbutton,
-              total === 0 && { opacity: 0.5 },
+              (total === 0 || !selectedTimeslot) && { opacity: 0.5 },
             ]}
-            disabled={total === 0}
-            onPress={() =>
-              router.push({ pathname: "/Payment", params: { id } })
-            }
+            disabled={total === 0 || !selectedTimeslot}
+            onPress={handlePlaceOrder}
           >
             <Text style={ordersummarystyle.buttontext}>Confirm Order</Text>
           </TouchableOpacity>

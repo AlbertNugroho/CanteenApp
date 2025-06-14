@@ -76,23 +76,19 @@ export default function VendorDetails() {
     try {
       const token = await SecureStore.getItemAsync("token");
       if (!token) throw new Error("Token not found");
-      console.log("Token:", token); // debug token
 
-      const response = await fetch(`${BASE_URL}/api/cart`, {
+      const response = await fetch(`${BASE_URL}/api/cart/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
       const result = await response.json();
-      console.log("Cart result from server:", result); // tambahkan ini
+      console.log("Cart result from server:", result);
 
       if (result.success && Array.isArray(result.data)) {
-        const cartItems = result.data.filter((item) => item.id_tenant === id);
-        console.log("Filtered cart items for vendor:", cartItems); // debug cartItems
-
         const newQuantities = {};
-        cartItems.forEach((item) => {
+        result.data.forEach((item) => {
           newQuantities[item.id_menu] = item.quantity;
         });
 
@@ -238,9 +234,13 @@ export default function VendorDetails() {
       <View style={vendordetailstyle.TopPicksContainer}>
         <Image
           style={vendordetailstyle.FoodImg}
-          source={{ uri: item.gambar_menu }}
+          source={
+            item.gambar_menu && item.gambar_menu.trim() !== ""
+              ? { uri: item.gambar_menu }
+              : require("../assets/images/Banner.png")
+          }
         />
-        {item.availability !== "Available" && (
+        {item.availability !== 1 && (
           <View style={vendordetailstyle.unavailableOverlay} />
         )}
         <View style={vendordetailstyle.FoodTextContainer}>
@@ -252,13 +252,13 @@ export default function VendorDetails() {
           {quantity === 0 ? (
             <TouchableOpacity
               style={vendordetailstyle.addButtontoppicks}
-              disabled={item.availability !== "Available"}
+              disabled={item.availability !== 1}
               onPress={() => {
                 handleAdd(item.id_menu, 1, true); // explicitly sync as add
               }}
             >
               <Text style={{ color: "#000000", fontFamily: "Calibri" }}>
-                {item.availability === "Available" ? "Add" : "Sold Out"}
+                {item.availability === 1 ? "Add" : "Sold Out"}
               </Text>
             </TouchableOpacity>
           ) : (
@@ -289,7 +289,7 @@ export default function VendorDetails() {
         <TouchableOpacity
           style={vendordetailstyle.BuyButtonContainer}
           onPress={async () => {
-            router.replace({
+            router.push({
               pathname: "/OrderSummary",
               params: { id },
             });
@@ -318,7 +318,7 @@ export default function VendorDetails() {
             source={
               vendorOverview?.image
                 ? { uri: vendorOverview.image }
-                : require("../assets/images/cardprofile.png") // a placeholder image
+                : require("../assets/images/LavaChicken.png") // a placeholder image
             }
           />
           <View style={vendordetailstyle.header}>
@@ -365,12 +365,14 @@ export default function VendorDetails() {
           return (
             <View key={menu.id_menu} style={vendordetailstyle.menuItem}>
               <Image
-                source={{
-                  uri: menu.gambar_menu || "https://via.placeholder.com/150",
-                }}
+                source={
+                  menu.gambar_menu && menu.gambar_menu.trim() !== ""
+                    ? { uri: menu.gambar_menu }
+                    : require("../assets/images/Banner.png")
+                }
                 style={vendordetailstyle.image}
               />
-              {menu.availability !== "Available" && (
+              {menu.availability !== 1 && (
                 <View style={vendordetailstyle.unavailableOverlay} />
               )}
               <View style={vendordetailstyle.info}>
@@ -391,13 +393,13 @@ export default function VendorDetails() {
                   {quantity === 0 ? (
                     <TouchableOpacity
                       style={vendordetailstyle.addButton}
-                      disabled={menu.availability !== "Available"}
+                      disabled={menu.availability !== 1}
                       onPress={() => {
                         handleAdd(menu.id_menu, 1, true); // explicitly sync as add
                       }}
                     >
                       <Text style={{ color: "#FFFFFF", fontFamily: "Calibri" }}>
-                        {menu.availability === "Available" ? "Add" : "Sold Out"}
+                        {menu.availability === 1 ? "Add" : "Sold Out"}
                       </Text>
                     </TouchableOpacity>
                   ) : (

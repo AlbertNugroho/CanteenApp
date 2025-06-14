@@ -9,9 +9,40 @@ import {
 import React from "react";
 import accountstyle from "../../styles/accountstyle";
 import { useTheme } from "@react-navigation/native";
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
+import * as SecureStore from "expo-secure-store";
+import BASE_URL from "../../utils/config";
 
 const account = () => {
   const { colors } = useTheme();
+  const [user, setUser] = useState({
+    name: "",
+    email: "",
+    role: "",
+    userId: "",
+  });
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const userJson = await SecureStore.getItemAsync("user");
+        if (userJson) {
+          const userData = JSON.parse(userJson);
+          setUser({
+            name: userData.nama_user,
+            email: userData.email_user,
+            role: userData.role,
+            userId: userData.id_user,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load user data:", error);
+      }
+    };
+
+    loadUserData();
+  }, []);
+
   return (
     <View style={accountstyle.container}>
       <ScrollView
@@ -21,7 +52,6 @@ const account = () => {
         <Image
           style={accountstyle.card}
           source={require("../../assets/images/cardprofile.png")}
-
         />
         <View style={accountstyle.profilecontainer}>
           <Image
@@ -33,26 +63,22 @@ const account = () => {
         <View style={accountstyle.infocard}>
           <View style={accountstyle.infocontainer}>
             <Text style={accountstyle.label}>Name</Text>
-            <Text style={accountstyle.text}>
-              Name DINIGARIUSDOTUNGTROLELOCINABU
-            </Text>
+            <Text style={accountstyle.text}>{user.name}</Text>
           </View>
           <View style={accountstyle.infodivider} />
           <View style={accountstyle.infocontainer}>
-            <Text style={accountstyle.label}>Student ID</Text>
-            <Text style={accountstyle.text}>2702300575</Text>
+            <Text style={accountstyle.label}>User ID</Text>
+            <Text style={accountstyle.text}>{user.userId}</Text>
           </View>
           <View style={accountstyle.infodivider} />
           <View style={accountstyle.infocontainer}>
             <Text style={accountstyle.label}>Email</Text>
-            <Text style={accountstyle.text}>alb.nigarius@binus.ac.id</Text>
+            <Text style={accountstyle.text}>{user.email}</Text>
           </View>
           <View style={accountstyle.infodivider} />
           <View style={accountstyle.infocontainer}>
-            <Text style={accountstyle.label}>Phone Number</Text>
-            <Text style={accountstyle.text}>
-              +62121111212122133232132313131
-            </Text>
+            <Text style={accountstyle.label}>Role</Text>
+            <Text style={accountstyle.text}>{user.role}</Text>
           </View>
         </View>
         <View style={accountstyle.infocard}>
@@ -64,7 +90,13 @@ const account = () => {
           </TouchableOpacity>
         </View>
         <View style={accountstyle.infocard}>
-          <TouchableOpacity>
+          <TouchableOpacity
+            onPress={async () => {
+              await SecureStore.deleteItemAsync("token");
+              await SecureStore.deleteItemAsync("user");
+              router.replace("/");
+            }}
+          >
             <View style={accountstyle.buttoncontainer}>
               <Image source={require("../../assets/images/logout.png")} />
               <Text style={accountstyle.buttontext}>Log Out</Text>

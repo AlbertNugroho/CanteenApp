@@ -1,7 +1,7 @@
 // utils/config.js
 import Constants from "expo-constants";
 
-let ip = "localhost"; // fallback if nothing is found
+let ip = "192.168.0.118"; // fallback if nothing is found
 
 try {
   // Try to get IP from expo config (newer Expo)

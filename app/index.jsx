@@ -46,8 +46,10 @@ const Login = () => {
 
       if (data.success) {
         const token = data.data.token;
+        const user = data.data.user;
         setMessage("Login successful!");
         await SecureStore.setItemAsync("token", token);
+        await SecureStore.setItemAsync("user", JSON.stringify(user));
         // Replace with replace later
         router.push("/Home");
       } else {
@@ -82,6 +84,7 @@ const Login = () => {
           placeholder="Enter your password"
           placeholderTextColor="#999"
           secureTextEntry
+          autoCapitalize="none"
           value={password}
           onChangeText={setPassword}
         />

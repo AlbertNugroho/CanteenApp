@@ -61,8 +61,8 @@ export default function TabLayout() {
             borderBottomWidth: 2,
             backgroundColor: "#ffffff", // your desired header background color
           },
-          headerTitleStyle:{
-            fontFamily: "Calibri"
+          headerTitleStyle: {
+            fontFamily: "Calibri",
           },
           headerTintColor: "#000000",
         }}
@@ -81,10 +81,17 @@ export default function TabLayout() {
             borderBottomWidth: 2,
             backgroundColor: "#ffffff", // your desired header background color
           },
-          headerTitleStyle:{
-            fontFamily: "Calibri"
+          headerTitleStyle: {
+            fontFamily: "Calibri",
           },
           headerTintColor: "#000000",
+        }}
+      />
+      <Tabs.Screen
+        name="SearchVendors"
+        options={{
+          href: null,
+          title: "SearchVendors",
         }}
       />
     </Tabs>
