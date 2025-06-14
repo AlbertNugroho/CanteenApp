@@ -1,68 +1,116 @@
-import { View, Text, TouchableOpacity } from "react-native";
-import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  Image,
+  ActivityIndicator,
+} from "react-native";
+import React, { useEffect, useState } from "react";
 import activitystyle from "../../styles/activitystyle";
-import { foodOrderData } from "../../data/ActivityData";
 import { router } from "expo-router";
-import { FlatList, Image } from "react-native";
+import * as SecureStore from "expo-secure-store";
+import BASE_URL from "../../utils/config";
 
-const renderVendorItem = ({ item }) => (
-  <View style={[activitystyle.AllVendors]}>
-    <TouchableOpacity
-      activeOpacity={0.9}
-      onPress={() =>
-        router.push({
-          pathname: item.ongoing ? "../OrderOngoing" : "../VendorDetails",
-          params: { id: item.food.id },
-        })
-      }
-    >
-      <Image
-        style={[activitystyle.promoFoodsImg]}
-        source={{ uri: item.food.image }}
-      />
-      <View style={[activitystyle.VendorsTextContainer]}>
-        <Text style={[activitystyle.promoFoodsText]}>{item.food.name}</Text>
-        <View style={[activitystyle.promoFoodsText2, { flexDirection: "row" }]}>
-          <Image
-            style={{ width: 10, alignSelf: "center", marginRight: 5 }}
-            source={require("../../assets/images/Map Pin.png")}
-          />
-          <Text style={[activitystyle.promoFoodsText2]}>{item.food.place}</Text>
+const renderVendorItem = ({ item }) => {
+  console.log("Item:", item); // ✅ Move it here
+
+  return (
+    <View style={activitystyle.AllVendors}>
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={() =>
+          router.push({
+            pathname:
+              item.status.toLowerCase() === "pending"
+                ? "../OrderOngoing"
+                : "../VendorDetails",
+            params: {
+              id:
+                item.status.toLowerCase() === "pending"
+                  ? item.id_transaksi
+                  : item.id_transaksi.split("-")[0], // gets "T009"
+            },
+          })
+        }
+      >
+        <Image
+          style={activitystyle.promoFoodsImg}
+          source={{ uri: item.image || "https://via.placeholder.com/150" }}
+        />
+        <View style={activitystyle.VendorsTextContainer}>
+          <Text style={activitystyle.promoFoodsText}>{item.nama_tenant}</Text>
+          <View
+            style={[activitystyle.promoFoodsText2, { flexDirection: "row" }]}
+          >
+            <Text style={activitystyle.promoFoodsText2}>
+              #{item.id_transaksi.substring(0, 8)}
+            </Text>
+          </View>
+          <Text style={activitystyle.indicator}>Status: {item.status}</Text>
         </View>
-        <Text style={activitystyle.indicator}>
-          {item.ongoing ? `Pickup Time: ${item.pickupTime}` : "Order Again"}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  </View>
+      </TouchableOpacity>
+    </View>
+  );
+};
+const OngoingView = ({ data }) => (
+  <FlatList
+    data={data}
+    showsVerticalScrollIndicator={false}
+    keyExtractor={(item) => item.id_transaksi}
+    renderItem={renderVendorItem}
+    ListEmptyComponent={<Text>No ongoing orders</Text>}
+  />
 );
 
-const OngoingView = ({ data }) => {
-  return (
-    <FlatList
-      data={data}
-      keyExtractor={(item) => item.id}
-      renderItem={renderVendorItem}
-      ListEmptyComponent={<Text>No ongoing orders</Text>}
-    />
-  );
-};
-
-const HistoryView = ({ data }) => {
-  return (
-    <FlatList
-      data={data}
-      keyExtractor={(item) => item.id}
-      renderItem={renderVendorItem}
-      ListEmptyComponent={<Text>No history orders</Text>}
-    />
-  );
-};
+const HistoryView = ({ data }) => (
+  <FlatList
+    data={data}
+    showsVerticalScrollIndicator={false}
+    keyExtractor={(item) => item.id_transaksi}
+    renderItem={renderVendorItem}
+    ListEmptyComponent={<Text>No history orders</Text>}
+  />
+);
 
 const Activity = () => {
   const [showSecondView, setShowSecondView] = useState(false);
-  const ongoingOrders = foodOrderData.filter((order) => order.ongoing);
-  const historyOrders = foodOrderData.filter((order) => !order.ongoing);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchMyOrders = async () => {
+    const token = await SecureStore.getItemAsync("token");
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${BASE_URL}/api/orders/my-orders`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const json = await res.json();
+
+      if (json.success) {
+        setOrders(json.data);
+      } else {
+        console.log("Failed to fetch orders:", json.message);
+      }
+    } catch (error) {
+      console.error("Fetch orders error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMyOrders();
+  }, []);
+
+  const ongoingOrders = orders.filter(
+    (order) => order.status.trim().toLowerCase() === "pending"
+  );
+  const historyOrders = orders.filter(
+    (order) => order.status.trim().toLowerCase() === "completed"
+  );
+
   return (
     <View style={activitystyle.container}>
       <View style={activitystyle.buttoncontainer}>
@@ -89,7 +137,9 @@ const Activity = () => {
       </View>
 
       <View style={activitystyle.content}>
-        {showSecondView ? (
+        {loading ? (
+          <ActivityIndicator size="large" color="#000" />
+        ) : showSecondView ? (
           <HistoryView data={historyOrders} />
         ) : (
           <OngoingView data={ongoingOrders} />
