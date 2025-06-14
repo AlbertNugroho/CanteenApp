@@ -12,47 +12,51 @@ import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import BASE_URL from "../../utils/config";
 
-const renderVendorItem = ({ item }) => {
-  console.log("Item:", item); // ✅ Move it here
-
-  return (
-    <View style={activitystyle.AllVendors}>
-      <TouchableOpacity
-        activeOpacity={0.9}
-        onPress={() =>
-          router.push({
-            pathname:
+const renderVendorItem = ({ item }) => (
+  <View style={activitystyle.AllVendors}>
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={() =>
+        router.push({
+          pathname:
+            item.status.toLowerCase() === "pending"
+              ? "../OrderOngoing"
+              : "../VendorDetails",
+          params: {
+            id:
               item.status.toLowerCase() === "pending"
-                ? "../OrderOngoing"
-                : "../VendorDetails",
-            params: {
-              id:
-                item.status.toLowerCase() === "pending"
-                  ? item.id_transaksi
-                  : item.id_transaksi.split("-")[0], // gets "T009"
-            },
-          })
-        }
-      >
-        <Image
-          style={activitystyle.promoFoodsImg}
-          source={{ uri: item.image || "https://via.placeholder.com/150" }}
-        />
-        <View style={activitystyle.VendorsTextContainer}>
-          <Text style={activitystyle.promoFoodsText}>{item.nama_tenant}</Text>
-          <View
-            style={[activitystyle.promoFoodsText2, { flexDirection: "row" }]}
-          >
-            <Text style={activitystyle.promoFoodsText2}>
-              #{item.id_transaksi.substring(0, 8)}
-            </Text>
-          </View>
-          <Text style={activitystyle.indicator}>Status: {item.status}</Text>
+                ? item.id_transaksi
+                : item.id_vendor, // change `id_vendor` if your key is different
+          },
+        })
+      }
+    >
+      <Image
+        style={activitystyle.promoFoodsImg}
+        source={{ uri: item.image || "https://via.placeholder.com/150" }}
+      />
+      <View style={activitystyle.VendorsTextContainer}>
+        <Text style={activitystyle.promoFoodsText}>{item.nama_tenant}</Text>
+        <View style={[activitystyle.promoFoodsText2, { flexDirection: "row" }]}>
+          <Image
+            style={{
+              width: 10,
+              height: 10,
+              alignSelf: "center",
+              marginRight: 5,
+            }}
+            source={require("../../assets/images/Map Pin.png")}
+          />
+          <Text style={activitystyle.promoFoodsText2}>
+            #{item.id_transaksi.substring(0, 8)}
+          </Text>
         </View>
-      </TouchableOpacity>
-    </View>
-  );
-};
+        <Text style={activitystyle.indicator}>Status: {item.status}</Text>
+      </View>
+    </TouchableOpacity>
+  </View>
+);
+
 const OngoingView = ({ data }) => (
   <FlatList
     data={data}

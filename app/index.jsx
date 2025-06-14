@@ -47,11 +47,17 @@ const Login = () => {
       if (data.success) {
         const token = data.data.token;
         const user = data.data.user;
+
         setMessage("Login successful!");
         await SecureStore.setItemAsync("token", token);
         await SecureStore.setItemAsync("user", JSON.stringify(user));
-        // Replace with replace later
-        router.push("/Home");
+
+        // Check user role and navigate
+        if (user.role === "seller") {
+          router.push("/(vendorside)/VendorHome");
+        } else {
+          router.push("/(tabs)/Home");
+        }
       } else {
         setMessage("Login failed: " + data.message);
       }

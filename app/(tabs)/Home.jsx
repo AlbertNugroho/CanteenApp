@@ -143,8 +143,8 @@ const Home = () => {
           <View style={homestyle.header}>
             <TouchableOpacity style={homestyle.headerbutton}>
               <View style={homestyle.headertextcontainer}>
+                <Text style={homestyle.text}>BINUS University</Text>
                 <Text style={homestyle.text}>Student Undergraduate</Text>
-                <Text style={homestyle.text}>Binus@Semarang</Text>
               </View>
               <View style={homestyle.headerimg}>
                 <Image
@@ -155,7 +155,7 @@ const Home = () => {
             </TouchableOpacity>
             <Image
               style={homestyle.pp}
-              source={require("../../assets/images/LavaChicken.png")}
+              source={require("../../assets/images/PP.png")}
             />
           </View>
           <Image

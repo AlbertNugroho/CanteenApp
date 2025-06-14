@@ -44,6 +44,7 @@ const Register = () => {
 
   const handleRegister = async () => {
     const data = { name, email, password };
+    const user = data.data.user;
     if (userType === "seller") data.storeName = storeName;
 
     try {
@@ -59,8 +60,14 @@ const Register = () => {
       const result = await response.json();
       if (response.ok && result.success) {
         await SecureStore.setItemAsync("token", String(result.data.token));
+        await SecureStore.setItemAsync("user", JSON.stringify(user));
         setMessage("Registration successful!");
-        router.push("/Home");
+
+        if (userType === "seller") {
+          router.push("/(vendorside)/VendorHome");
+        } else {
+          router.push("/(tabs)/Home");
+        }
       } else {
         setMessage("Registration failed: " + result.message);
       }

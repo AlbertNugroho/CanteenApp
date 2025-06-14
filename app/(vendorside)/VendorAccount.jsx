@@ -26,13 +26,14 @@ const account = () => {
     const loadUserData = async () => {
       try {
         const userJson = await SecureStore.getItemAsync("user");
+        console.log("User object from login response:", user);
         if (userJson) {
           const userData = JSON.parse(userJson);
           setUser({
-            name: userData.nama_user,
-            email: userData.email_user,
+            name: userData.nama_tenant,
+            email: userData.email_tenant,
             role: userData.role,
-            userId: userData.id_user,
+            userId: userData.id_tenant,
           });
         }
       } catch (error) {
