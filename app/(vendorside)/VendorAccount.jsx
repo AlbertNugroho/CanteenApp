@@ -63,12 +63,12 @@ const account = () => {
         <View style={accountstyle.divider} />
         <View style={accountstyle.infocard}>
           <View style={accountstyle.infocontainer}>
-            <Text style={accountstyle.label}>Name</Text>
+            <Text style={accountstyle.label}>Store Name</Text>
             <Text style={accountstyle.text}>{user.name}</Text>
           </View>
           <View style={accountstyle.infodivider} />
           <View style={accountstyle.infocontainer}>
-            <Text style={accountstyle.label}>User ID</Text>
+            <Text style={accountstyle.label}>Tenant ID</Text>
             <Text style={accountstyle.text}>{user.userId}</Text>
           </View>
           <View style={accountstyle.infodivider} />

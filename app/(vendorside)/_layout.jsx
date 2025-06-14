@@ -41,7 +41,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="VendorHome"
         options={{
-          title: "VendorHome",
+          title: "Vendor Home",
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons size={28} name="file-clock" color={color} />
           ),
@@ -61,7 +61,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="VendorActivity"
         options={{
-          title: "VendorActivity",
+          title: "Vendor Activity",
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons size={28} name="file-clock" color={color} />
           ),
@@ -81,7 +81,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="VendorAccount"
         options={{
-          title: "VendorAccount",
+          title: "Vendor Account",
           tabBarIcon: ({ color }) => (
             <FontAwesome6 size={28} name="user-large" color={color} />
           ),

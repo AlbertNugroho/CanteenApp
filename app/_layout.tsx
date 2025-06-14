@@ -117,7 +117,34 @@ export default function RootLayout() {
                     fontFamily: "Calibri",
                   }}
                 >
-                  Order Summary
+                  Order Ongoing
+                </Text>
+              </View>
+            ),
+          }}
+        />
+        <Stack.Screen
+          name="AddMenu"
+          options={{
+            header: (props) => (
+              <View
+                style={{
+                  height: 100,
+                  backgroundColor: "white",
+                  borderBottomColor: "#000000",
+                  borderBottomWidth: 2,
+                  justifyContent: "flex-end",
+                  alignItems: "flex-start",
+                  padding: 16, // optional padding
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontFamily: "Calibri",
+                  }}
+                >
+                  Add New Menu
                 </Text>
               </View>
             ),

@@ -56,6 +56,7 @@ const renderVendorItem = ({ item }) => {
 const OngoingView = ({ data }) => (
   <FlatList
     data={data}
+    showsVerticalScrollIndicator={false}
     keyExtractor={(item) => item.id_transaksi}
     renderItem={renderVendorItem}
     ListEmptyComponent={<Text>No ongoing orders</Text>}
@@ -65,6 +66,7 @@ const OngoingView = ({ data }) => (
 const HistoryView = ({ data }) => (
   <FlatList
     data={data}
+    showsVerticalScrollIndicator={false}
     keyExtractor={(item) => item.id_transaksi}
     renderItem={renderVendorItem}
     ListEmptyComponent={<Text>No history orders</Text>}
