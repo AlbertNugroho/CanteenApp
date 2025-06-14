@@ -216,6 +216,7 @@ const VendorHome = () => {
             height: 50,
             alignItems: "center",
             justifyContent: "center",
+            zIndex: 1,
           }}
           onPress={() => router.push("../AddMenu")}
         >

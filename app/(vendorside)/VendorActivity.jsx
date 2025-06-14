@@ -120,7 +120,7 @@ const Activity = () => {
               ]}
               onPress={() => updateOrderStatus(transactionId, "Completed")}
             >
-              <Text style={activitystyle.buttonText}>Ready for Pickup</Text>
+              <Text style={activitystyle.buttonText}>Ready</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
@@ -129,7 +129,7 @@ const Activity = () => {
               ]}
               onPress={() => updateOrderStatus(transactionId, "Cancelled")}
             >
-              <Text style={activitystyle.buttonText}>Cancel Order</Text>
+              <Text style={activitystyle.buttonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
         );
