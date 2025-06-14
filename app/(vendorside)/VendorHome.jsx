@@ -216,6 +216,7 @@ const VendorHome = () => {
             height: 50,
             alignItems: "center",
             justifyContent: "center",
+            zIndex: 1,
           }}
           onPress={() => router.push("../AddMenu")}
         >
@@ -250,7 +251,16 @@ const VendorHome = () => {
         {loadingMenus ? (
           <ActivityIndicator size="large" />
         ) : menus.length === 0 ? (
-          <Text style={{ color: colors.text }}>
+          <Text
+            style={{
+              fontFamily: "CalibriBold",
+              marginHorizontal: 16,
+              alignSelf: "center",
+              fontSize: 16,
+              position: "absolute",
+              bottom: "50%",
+            }}
+          >
             You have not added any menu items yet.
           </Text>
         ) : (

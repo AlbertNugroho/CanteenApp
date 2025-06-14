@@ -120,7 +120,7 @@ const Activity = () => {
               ]}
               onPress={() => updateOrderStatus(transactionId, "Completed")}
             >
-              <Text style={activitystyle.buttonText}>Ready for Pickup</Text>
+              <Text style={activitystyle.buttonText}>Ready</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
@@ -129,7 +129,7 @@ const Activity = () => {
               ]}
               onPress={() => updateOrderStatus(transactionId, "Cancelled")}
             >
-              <Text style={activitystyle.buttonText}>Cancel Order</Text>
+              <Text style={activitystyle.buttonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
         );
@@ -194,7 +194,18 @@ const Activity = () => {
             keyExtractor={(item) => item.id_transaksi}
             renderItem={renderItem}
             showsVerticalScrollIndicator={false}
-            ListEmptyComponent={<Text>No orders found.</Text>}
+            ListEmptyComponent={
+              <Text
+                style={{
+                  fontFamily: "CalibriBold",
+                  marginHorizontal: 16,
+                  alignSelf: "center",
+                  fontSize: 16,
+                }}
+              >
+                No orders found.
+              </Text>
+            }
           />
         )}
       </View>
