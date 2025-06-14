@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Tenant Image Retrieval</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        img {
+            max-width: 100%;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Test Tenant Image Retrieval</h2>
+    <div class="form-group">
+        <label for="tenantId">Tenant ID:</label>
+        <input type="text" id="tenantId" value="T001" required>
+        <button onclick="getImage()">Get Tenant Image</button>
+    </div>
+
+    <div id="result" style="margin-top: 20px;"></div>
+    <div id="imageContainer"></div>
+
+    <script>
+        async function getImage() {
+            const tenantId = document.getElementById('tenantId').value;
+            const resultDiv = document.getElementById('result');
+            const imageContainer = document.getElementById('imageContainer');
+            
+            resultDiv.innerHTML = '';
+            imageContainer.innerHTML = '';
+
+            try {
+                const response = await fetch(`http://localhost:3001/api/tenant-images/${tenantId}`);
+                const result = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <h3>Response:</h3>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+
+                if (result.success && result.data.imageUrl) {
+                    imageContainer.innerHTML = `
+                        <h3>Image:</h3>
+                        <img src="${result.data.imageUrl}" alt="Tenant Image">
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>Error:</h3>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
