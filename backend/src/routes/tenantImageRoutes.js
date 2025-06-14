@@ -11,7 +11,11 @@ const upload = multer({
   }
 });
 
-// Upload tenant image
+/**
+ * @route   POST /api/tenant-images/upload/:tenantId
+ * @desc    Upload an image for a specific tenant
+ * @access  Private (should be auth protected)
+ */
 router.post('/upload/:tenantId', upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
@@ -36,10 +40,22 @@ router.post('/upload/:tenantId', upload.single('image'), async (req, res) => {
   }
 });
 
-// Get tenant image
+/**
+ * @route   GET /api/tenant-images/:tenantId
+ * @desc    Get a temporary URL for a tenant's image
+ * @access  Public
+ */
 router.get('/:tenantId', async (req, res) => {
   try {
     const imageUrl = await tenantImageService.getTenantImage(req.params.tenantId);
+    
+    if (!imageUrl) {
+        return res.status(404).json({
+            success: false,
+            message: 'Tenant image not found.'
+        });
+    }
+
     res.json({
       success: true,
       data: { imageUrl }
