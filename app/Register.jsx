@@ -21,7 +21,6 @@ const Register = () => {
 
   const [userType, setUserType] = useState("customer");
   const [name, setName] = useState("");
-  const [storeName, setStoreName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -44,23 +43,32 @@ const Register = () => {
 
   const handleRegister = async () => {
     const data = { name, email, password };
-    const user = data.data.user;
-    if (userType === "seller") data.storeName = storeName;
 
     try {
-        const response = await fetch(
-          `${BASE_URL}/api/auth/register/${userType}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
-          }
-        );
+      const response = await fetch(
+        `${BASE_URL}/api/auth/register/${userType}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        }
+      );
 
       const result = await response.json();
+      console.log("Result:", result);
+      console.log("Response status:", response.status);
+      console.log("Data sent:", data);
+
       if (response.ok && result.success) {
+        const user = result.data.user;
+
         await SecureStore.setItemAsync("token", String(result.data.token));
-        await SecureStore.setItemAsync("user", JSON.stringify(user));
+
+        // ✅ Only store user if it exists
+        if (user) {
+          await SecureStore.setItemAsync("user", JSON.stringify(user));
+        }
+
         setMessage("Registration successful!");
 
         if (userType === "seller") {
@@ -68,10 +76,9 @@ const Register = () => {
         } else {
           router.push("/(tabs)/Home");
         }
-      } else {
-        setMessage("Registration failed: " + result.message);
       }
     } catch (error) {
+      console.error("Registration error:", error);
       setMessage("Error: " + error.message);
     }
   };
@@ -112,7 +119,9 @@ const Register = () => {
               containerStyle={{ marginBottom: 16 }}
             />
 
-            <Text style={login.label}>Name</Text>
+            <Text style={login.label}>
+              {userType === "seller" ? "Store Name" : "Name"}
+            </Text>
             <TextInput
               style={login.input}
               placeholder="Enter your name"
@@ -120,19 +129,6 @@ const Register = () => {
               placeholderTextColor="#999"
               onChangeText={setName}
             />
-
-            {userType === "seller" && (
-              <>
-                <Text style={login.label}>Store Name</Text>
-                <TextInput
-                  style={login.input}
-                  placeholder="Enter your store name"
-                  value={storeName}
-                  placeholderTextColor="#999"
-                  onChangeText={setStoreName}
-                />
-              </>
-            )}
 
             <Text style={login.label}>Email</Text>
             <TextInput

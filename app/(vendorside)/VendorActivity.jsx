@@ -194,7 +194,18 @@ const Activity = () => {
             keyExtractor={(item) => item.id_transaksi}
             renderItem={renderItem}
             showsVerticalScrollIndicator={false}
-            ListEmptyComponent={<Text>No orders found.</Text>}
+            ListEmptyComponent={
+              <Text
+                style={{
+                  fontFamily: "CalibriBold",
+                  marginHorizontal: 16,
+                  alignSelf: "center",
+                  fontSize: 16,
+                }}
+              >
+                No orders found.
+              </Text>
+            }
           />
         )}
       </View>
