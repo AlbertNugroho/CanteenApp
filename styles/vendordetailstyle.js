@@ -213,6 +213,7 @@ const vendordetailstyle = StyleSheet.create({
     width: "100%",
     height: "100%",
     height: 150,
+    backgroundColor: "#ffffff",
     borderRadius: 10,
     elevation: 2,
   },

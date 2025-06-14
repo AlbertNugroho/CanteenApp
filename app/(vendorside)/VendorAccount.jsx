@@ -6,15 +6,16 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import accountstyle from "../../styles/accountstyle";
 import { useTheme } from "@react-navigation/native";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
 import * as SecureStore from "expo-secure-store";
+import * as ImagePicker from "expo-image-picker";
 import BASE_URL from "../../utils/config";
+import { fetchTenantImage } from "../../utils/fetchimages";
 
-const account = () => {
+const Account = () => {
   const { colors } = useTheme();
   const [user, setUser] = useState({
     name: "",
@@ -22,19 +23,26 @@ const account = () => {
     role: "",
     userId: "",
   });
+
+  const [profileImage, setProfileImage] = useState(null);
+
   useEffect(() => {
     const loadUserData = async () => {
       try {
         const userJson = await SecureStore.getItemAsync("user");
-        console.log("User object from login response:", user);
         if (userJson) {
           const userData = JSON.parse(userJson);
+
+          const imageUrl = await fetchTenantImage(userData.id_tenant); // <- Fetch image
+
           setUser({
             name: userData.nama_tenant,
             email: userData.email_tenant,
             role: userData.role,
             userId: userData.id_tenant,
           });
+
+          setProfileImage(imageUrl); // <- Set fetched image
         }
       } catch (error) {
         console.error("Failed to load user data:", error);
@@ -44,22 +52,89 @@ const account = () => {
     loadUserData();
   }, []);
 
+  const pickImage = async () => {
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      alert("Permission to access media library is required!");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      const pickedImage = result.assets[0];
+      setProfileImage(pickedImage.uri);
+      uploadImage(pickedImage);
+    }
+  };
+
+  const uploadImage = async (imageAsset) => {
+    const formData = new FormData();
+    formData.append("image", {
+      uri: imageAsset.uri,
+      name: "profile.jpg",
+      type: "image/jpeg",
+    });
+
+    try {
+      const userStr = await SecureStore.getItemAsync("user");
+      const token = await SecureStore.getItemAsync("token");
+      if (!userStr || !token) return;
+      const userData = JSON.parse(userStr);
+
+      const response = await fetch(
+        `${BASE_URL}/api/tenant-images/upload/${userData.id_tenant}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+          body: formData,
+        }
+      );
+
+      const result = await response.json();
+      console.log("Upload Result:", result);
+    } catch (err) {
+      console.error("Upload error:", err);
+    }
+  };
+
   return (
     <View style={accountstyle.container}>
-      <ScrollView
-        nestedScrollEnabled={true}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
         <Image
           style={accountstyle.card}
           source={require("../../assets/images/cardprofile.png")}
         />
-        <View style={accountstyle.profilecontainer}>
+
+        <TouchableOpacity
+          style={accountstyle.profilecontainer}
+          onPress={pickImage}
+        >
           <Image
             style={accountstyle.pp}
-            source={require("../../assets/images/PP.png")}
+            source={
+              profileImage
+                ? { uri: profileImage }
+                : require("../../assets/images/PP.png")
+            }
           />
-        </View>
+          <View style={styles.pencilIconContainer}>
+            <Image
+              source={require("../../assets/images/pencil.png")}
+              style={styles.pencilIcon}
+            />
+          </View>
+        </TouchableOpacity>
+
         <View style={accountstyle.divider} />
         <View style={accountstyle.infocard}>
           <View style={accountstyle.infocontainer}>
@@ -82,6 +157,7 @@ const account = () => {
             <Text style={accountstyle.text}>{user.role}</Text>
           </View>
         </View>
+
         <View style={accountstyle.infocard}>
           <TouchableOpacity>
             <View style={accountstyle.buttoncontainer}>
@@ -90,6 +166,7 @@ const account = () => {
             </View>
           </TouchableOpacity>
         </View>
+
         <View style={accountstyle.infocard}>
           <TouchableOpacity
             onPress={async () => {
@@ -104,6 +181,7 @@ const account = () => {
             </View>
           </TouchableOpacity>
         </View>
+
         <View style={accountstyle.bottominfo}>
           <TouchableOpacity>
             <Text style={accountstyle.bottomtext}>Privacy Policy</Text>
@@ -121,4 +199,21 @@ const account = () => {
   );
 };
 
-export default account;
+const styles = StyleSheet.create({
+  pencilIconContainer: {
+    position: "absolute",
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 4,
+    left: 85,
+    top: 15,
+    borderColor: "#000000B0",
+    borderWidth: 1,
+  },
+  pencilIcon: {
+    width: 16,
+    height: 16,
+  },
+});
+
+export default Account;

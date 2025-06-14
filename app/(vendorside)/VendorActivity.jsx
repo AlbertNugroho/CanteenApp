@@ -30,10 +30,10 @@ const Activity = () => {
       if (json.success) {
         setOrders(json.data);
       } else {
-        console.error("Fetch error:", json.message);
+        // console.error("Fetch error:", json.message);
       }
     } catch (err) {
-      console.error("Fetch error:", err);
+      // console.error("Fetch error:", err);
     } finally {
       setLoading(false);
     }

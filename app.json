@@ -34,7 +34,13 @@
         }
       ],
       "expo-font",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow the app to access your gallery"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
