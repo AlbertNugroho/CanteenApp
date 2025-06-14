@@ -72,9 +72,9 @@ const Register = () => {
         setMessage("Registration successful!");
 
         if (userType === "seller") {
-          router.push("/(vendorside)/VendorHome");
+          router.replace("/(vendorside)/VendorHome");
         } else {
-          router.push("/(tabs)/Home");
+          router.replace("/(tabs)/Home");
         }
       }
     } catch (error) {

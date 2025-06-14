@@ -54,9 +54,9 @@ const Login = () => {
 
         // Check user role and navigate
         if (user.role === "seller") {
-          router.push("/(vendorside)/VendorHome");
+          router.replace("/(vendorside)/VendorHome");
         } else {
-          router.push("/(tabs)/Home");
+          router.replace("/(tabs)/Home");
         }
       } else {
         setMessage("Login failed: " + data.message);
