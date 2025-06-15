@@ -22,6 +22,7 @@ const ordersummarystyle = StyleSheet.create({
   infocontainer: {
     flexDirection: "row",
     marginVertical: 15,
+    height: 100,
   },
   infocontainertext: {
     flex: 1,

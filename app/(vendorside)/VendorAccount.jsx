@@ -26,13 +26,14 @@ const account = () => {
     const loadUserData = async () => {
       try {
         const userJson = await SecureStore.getItemAsync("user");
+        console.log("User object from login response:", user);
         if (userJson) {
           const userData = JSON.parse(userJson);
           setUser({
-            name: userData.nama_user,
-            email: userData.email_user,
+            name: userData.nama_tenant,
+            email: userData.email_tenant,
             role: userData.role,
-            userId: userData.id_user,
+            userId: userData.id_tenant,
           });
         }
       } catch (error) {
@@ -62,12 +63,12 @@ const account = () => {
         <View style={accountstyle.divider} />
         <View style={accountstyle.infocard}>
           <View style={accountstyle.infocontainer}>
-            <Text style={accountstyle.label}>Name</Text>
+            <Text style={accountstyle.label}>Store Name</Text>
             <Text style={accountstyle.text}>{user.name}</Text>
           </View>
           <View style={accountstyle.infodivider} />
           <View style={accountstyle.infocontainer}>
-            <Text style={accountstyle.label}>User ID</Text>
+            <Text style={accountstyle.label}>Tenant ID</Text>
             <Text style={accountstyle.text}>{user.userId}</Text>
           </View>
           <View style={accountstyle.infodivider} />

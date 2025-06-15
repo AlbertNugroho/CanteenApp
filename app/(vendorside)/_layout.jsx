@@ -39,19 +39,9 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="Home"
+        name="VendorHome"
         options={{
-          title: "Home",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
-        name="Activity"
-        options={{
-          title: "Activity",
+          title: "Vendor Home",
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons size={28} name="file-clock" color={color} />
           ),
@@ -69,9 +59,29 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="Account"
+        name="VendorActivity"
         options={{
-          title: "Account",
+          title: "Vendor Activity",
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons size={28} name="file-clock" color={color} />
+          ),
+          headerShown: true,
+          headerStyle: {
+            height: 100,
+            borderBottomWidth: 2,
+            backgroundColor: "#ffffff", // your desired header background color
+          },
+          headerTitleStyle: {
+            fontFamily: "Calibri",
+          },
+          headerTintColor: "#000000",
+        }}
+      />
+
+      <Tabs.Screen
+        name="VendorAccount"
+        options={{
+          title: "Vendor Account",
           tabBarIcon: ({ color }) => (
             <FontAwesome6 size={28} name="user-large" color={color} />
           ),
@@ -88,10 +98,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="SearchVendors"
+        name="VendorSearchVendors"
         options={{
           href: null,
-          title: "SearchVendors",
+          title: "VendorSearchVendors",
         }}
       />
     </Tabs>

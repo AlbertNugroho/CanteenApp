@@ -37,8 +37,11 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(vendorside)" options={{ headerShown: false }} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="Register" options={{ headerShown: false }} />
         <Stack.Screen name="VendorDetails" options={{ headerShown: false }} />
+        <Stack.Screen name="paymentsuccess" options={{ headerShown: false }} />
         <Stack.Screen
           name="OrderSummary"
           options={{
@@ -67,6 +70,33 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen
+          name="Payment"
+          options={{
+            header: (props) => (
+              <View
+                style={{
+                  height: 100,
+                  backgroundColor: "white",
+                  borderBottomColor: "#000000",
+                  borderBottomWidth: 2,
+                  justifyContent: "flex-end",
+                  alignItems: "flex-start",
+                  padding: 16, // optional padding
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontFamily: "Calibri",
+                  }}
+                >
+                  Payment
+                </Text>
+              </View>
+            ),
+          }}
+        />
+        <Stack.Screen
           name="OrderOngoing"
           options={{
             header: (props) => (
@@ -87,7 +117,34 @@ export default function RootLayout() {
                     fontFamily: "Calibri",
                   }}
                 >
-                  Order Summary
+                  Order Ongoing
+                </Text>
+              </View>
+            ),
+          }}
+        />
+        <Stack.Screen
+          name="AddMenu"
+          options={{
+            header: (props) => (
+              <View
+                style={{
+                  height: 100,
+                  backgroundColor: "white",
+                  borderBottomColor: "#000000",
+                  borderBottomWidth: 2,
+                  justifyContent: "flex-end",
+                  alignItems: "flex-start",
+                  padding: 16, // optional padding
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontFamily: "Calibri",
+                  }}
+                >
+                  Add New Menu
                 </Text>
               </View>
             ),

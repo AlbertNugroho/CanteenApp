@@ -7,6 +7,22 @@ const activitystyle = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     padding: 15,
   },
+  actionButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    marginHorizontal: 5,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  header: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
   text: {
     fontFamily: "Calibri",
     fontSize: 16,
@@ -60,6 +76,46 @@ const activitystyle = StyleSheet.create({
     color: "black",
     fontSize: 10,
     fontFamily: "Calibri",
+  },
+  activityallcontain: {
+    width: "100%",
+    marginBottom: 20,
+    marginRight: 10,
+    padding: 15,
+    borderRadius: 20,
+    backgroundColor: "white",
+    elevation: 2,
+  },
+  activitycontainertext: {
+    color: "black",
+    fontFamily: "CalibriBold",
+    fontSize: 14,
+  },
+  activitycontainertext2: {
+    flexDirection: "row",
+    color: "black",
+    fontSize: 12,
+    fontFamily: "Calibri",
+  },
+  activitycontainer: {
+    flexDirection: "row",
+    marginTop: 10,
+  },
+  activityindicator: {
+    fontFamily: "Calibri",
+    color: "#ffffff",
+    backgroundColor: "#000000",
+    textAlign: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    padding: 5,
+    borderRadius: 6,
+    flex: 1,
+  },
+  buttons: {
+    flexDirection: "row",
+    width: "60%",
+    
   },
   VendorsTextContainer: {
     backgroundColor: "white",
