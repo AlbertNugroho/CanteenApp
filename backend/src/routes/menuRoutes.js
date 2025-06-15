@@ -15,4 +15,7 @@ router.post('/add', auth, sellerAuth, menuController.addMenu);
 // Update a menu item's availability
 router.put('/:menuId/availability', auth, sellerAuth, menuController.updateMenuAvailability);
 
+// [NEW] Delete a menu item
+router.delete('/:menuId', auth, sellerAuth, menuController.deleteMenu);
+
 module.exports = router;

@@ -105,3 +105,24 @@ exports.updateMenuAvailability = async (req, res) => {
         });
     }
 };
+
+/**
+ * [NEW] Delete a menu item
+ * @route DELETE /api/menus/:menuId
+ * @access Private (Seller only)
+ */
+exports.deleteMenu = async (req, res) => {
+  try {
+    const { menuId } = req.params;
+    const tenantId = req.user.id; // from auth middleware
+
+    const result = await menuService.deleteMenuItem(menuId, tenantId);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('Error in deleteMenu controller:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to delete menu item'
+    });
+  }
+};
