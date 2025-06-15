@@ -5,438 +5,241 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seller Dashboard</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; max-width: 1200px; margin: 20px auto; padding: 0 20px; background-color: #f4f7f6; color: #333; }
-        .container { display: none; }
-        .container.active { display: block; }
-        .section { margin-bottom: 2rem; padding: 1.5rem; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        h1, h2, h3 { color: #1a2533; border-bottom: 2px solid #eee; padding-bottom: 0.5rem; }
-        h1 { text-align: center; border-bottom: none; }
-        h3 { border-bottom: none; font-size: 1.2rem; margin-bottom: 1rem; }
-        input, select, button, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem; box-sizing: border-box; }
-        textarea { resize: vertical; min-height: 80px; }
-        input[type="file"] { border: none; padding-left: 0;}
-        button { background-color: #007bff; color: white; cursor: pointer; font-weight: bold; transition: background-color 0.2s ease-in-out; border: none; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 20px; background-color: #f8f9fa; color: #333; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1, h2, h3 { color: #212529; }
+        h2 { border-bottom: 2px solid #dee2e6; padding-bottom: 10px; margin-top: 40px; }
+        .section { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        .hidden { display: none; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: 600; margin-bottom: 5px; }
+        input[type="text"], input[type="email"], input[type="password"], input[type="number"] { width: calc(100% - 20px); padding: 10px; border: 1px solid #ced4da; border-radius: 4px; }
+        button { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; }
         button:hover { background-color: #0056b3; }
-        button:disabled { background-color: #cccccc; cursor: not-allowed; }
-        .auth-tabs { display: flex; margin-bottom: 1.5rem; border-bottom: 1px solid #ccc; }
-        .tab-button { background-color: #f1f1f1; border: none; border-bottom: 3px solid transparent; padding: 1rem 1.5rem; cursor: pointer; font-size: 1rem; margin: 0; border-radius: 6px 6px 0 0; }
-        .tab-button.active { background-color: #fff; border-bottom: 3px solid #007bff; color: #007bff; }
-        .auth-form { display: none; }
-        .auth-form.active { display: block; }
-        .response { margin-top: 1rem; padding: 1rem; border-left: 4px solid #007bff; background-color: #e7f3ff; white-space: pre-wrap; word-wrap: break-word; font-family: monospace; }
-        #dashboard-header { display: flex; justify-content: space-between; align-items: center; }
-        #dashboard-header h2 { border-bottom: none; }
-        #logout-button { background-color: #6c757d; max-width: 120px; }
-        #logout-button:hover { background-color: #5a6268; }
-        .grid-container { display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; align-items: start; }
-        .order-list, .menu-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
-        .order-card, .menu-card { padding: 1rem; border: 1px solid #ddd; border-radius: 8px; background-color: #fafafa; word-wrap: break-word; }
-        .order-card h3, .menu-card h4 { margin-top: 0; font-size: 1.1rem; }
-        .order-card p, .menu-card p { margin: 0.25rem 0; }
-        .status { font-weight: bold; padding: 2px 8px; border-radius: 12px; color: white; font-size: 0.8rem; display: inline-block; margin-bottom: 10px; }
-        .status-Pending { background-color: #ffc107; color: black; }
-        .status-On.Process { background-color: #17a2b8; }
-        .status-Completed { background-color: #28a745; }
-        .status-Cancelled { background-color: #dc3545; }
-        .status-Available { background-color: #28a745; }
-        .status-Out.of.Stock { background-color: #6c757d; }
-        .actions button, .menu-actions button { font-size: 0.8rem; padding: 5px 10px; margin-top: 0.5rem; margin-right: 5px; }
-        .actions .btn-accept, .menu-actions .btn-available { background-color: #28a745; }
-        .actions .btn-accept:hover, .menu-actions .btn-available:hover { background-color: #218838; }
-        .actions .btn-complete { background-color: #007bff; }
-        .actions .btn-complete:hover { background-color: #0056b3; }
-        .actions .btn-cancel, .menu-actions .btn-unavailable { background-color: #dc3545; }
-        .actions .btn-cancel:hover, .menu-actions .btn-unavailable:hover { background-color: #c82333; }
+        .delete-btn { background-color: #dc3545; }
+        .delete-btn:hover { background-color: #c82333; }
+        #menu-list, #order-list { list-style: none; padding: 0; }
+        .menu-item, .order-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid #dee2e6; border-radius: 4px; margin-bottom: 10px; }
+        .order-details ul { list-style: none; padding-left: 20px; margin-top: 10px; border-left: 2px solid #eee; }
+        .order-details li { padding: 5px 0; }
+        #error-zone { color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; border-radius: 4px; margin-top: 20px; }
     </style>
 </head>
 <body>
+    <div class="container">
+        <h1>Seller Dashboard</h1>
 
-    <div id="authContainer" class="container active">
-        <h1>Seller Portal</h1>
-        <div class="section">
-            <div class="auth-tabs">
-                <button class="tab-button active" data-tab="login" onclick="showAuthTab('login')">Login</button>
-                <button class="tab-button" data-tab="register" onclick="showAuthTab('register')">Register</button>
+        <!-- LOGIN SECTION -->
+        <div id="login-section" class="section">
+            <h2>Login</h2>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" value="tenant1@example.com">
             </div>
-
-            <div id="login" class="auth-form active">
-                <h2>Seller Login</h2>
-                <form id="loginForm">
-                    <input type="email" id="loginEmail" placeholder="Seller Email" required value="tenant@example.com">
-                    <input type="password" id="loginPassword" placeholder="Password" required value="password">
-                    <button type="submit">Login</button>
-                </form>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" value="password123">
             </div>
-
-            <div id="register" class="auth-form">
-                <h2>Seller Registration</h2>
-                <form id="registerForm">
-                    <input type="text" id="regName" placeholder="Your Name" required>
-                    <input type="text" id="storeName" placeholder="Store Name" required>
-                    <input type="email" id="regEmail" placeholder="Email" required>
-                    <input type="password" id="regPassword" placeholder="Password" required>
-                    <button type="submit">Register</button>
-                </form>
-            </div>
-            <div id="authResponse" class="response" style="display:none;"></div>
+            <button onclick="login()">Login</button>
         </div>
-    </div>
 
-    <div id="dashboardContainer" class="container">
-        <div id="dashboard-header">
-            <h2 id="welcomeMessage"></h2>
-            <button id="logout-button" onclick="logout()">Logout</button>
-        </div>
-        
-        <div class="grid-container">
-            <div class="left-column">
-                <div class="section">
-                    <h3>Upload Store Image</h3>
-                    <form id="uploadForm">
-                        <input type="file" id="image" name="image" accept="image/*" required>
-                        <button type="submit">Upload Image</button>
-                    </form>
-                    <div id="uploadResponse" class="response" style="display:none;"></div>
+        <!-- DASHBOARD FOR LOGGED IN USER -->
+        <div id="dashboard" class="hidden">
+            <div id="error-zone" class="hidden"></div>
+            
+            <!-- ADD MENU SECTION -->
+            <div class="section">
+                <h2>Add New Menu Item</h2>
+                <div class="form-group">
+                    <label for="menu-name">Menu Name</label>
+                    <input type="text" id="menu-name" placeholder="e.g., Nasi Goreng Spesial">
                 </div>
-                
-                <div class="section">
-                    <h3>Set Slot Capacity</h3>
-                    <form id="slotCapacityForm">
-                        <label for="slotCapacity">Orders per Timeslot:</label>
-                        <input type="number" id="slotCapacity" min="0" required>
-                        <button type="submit">Update Capacity</button>
-                    </form>
-                    <div id="slotCapacityResponse" class="response" style="display:none;"></div>
+                <div class="form-group">
+                    <label for="menu-desc">Description</label>
+                    <input type="text" id="menu-desc" placeholder="e.g., With chicken, egg, and pickles">
                 </div>
-
-                <div class="section">
-                    <h3>Add New Menu Item</h3>
-                    <form id="addMenuForm">
-                        <input type="text" id="menuName" placeholder="Menu Name" required>
-                        <textarea id="menuDescription" placeholder="Description" rows="3"></textarea>
-                        <input type="number" id="menuPrice" placeholder="Price (e.g., 25000)" required>
-                        <button type="submit">Add Menu</button>
-                    </form>
-                    <div id="addMenuResponse" class="response" style="display:none;"></div>
+                <div class="form-group">
+                    <label for="menu-price">Price (IDR)</label>
+                    <input type="number" id="menu-price" placeholder="e.g., 25000">
                 </div>
+                <button onclick="addMenu()">Add Menu Item</button>
             </div>
 
-            <div class="right-column">
-                <div class="section">
-                    <h3>My Menu</h3>
-                    <button onclick="fetchMyMenu()">Refresh My Menu</button>
-                    <div id="myMenuList" class="menu-list"></div>
-                    <div id="menuResponse" class="response" style="display:none;"></div>
-                </div>
-                <div class="section">
-                    <h2>Manage Orders</h2>
-                    <button onclick="fetchOrders()">Fetch My Orders</button>
-                    <div id="orderList" class="order-list"></div>
-                    <div id="orderResponse" class="response" style="display:none;"></div>
-                </div>
+            <!-- MANAGE MENU SECTION -->
+            <div class="section">
+                <h2>Manage My Menu</h2>
+                <ul id="menu-list"></ul>
+            </div>
+            
+            <!-- VIEW ORDERS SECTION -->
+            <div class="section">
+                <h2>My Orders</h2>
+                <ul id="order-list"></ul>
             </div>
         </div>
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3001/api';
-        let tenantInfo = null;
-        
-        function showAuthTab(tabId) {
-            document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
-            document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            const buttonToActivate = document.querySelector(`.tab-button[data-tab='${tabId}']`);
-            if (buttonToActivate) buttonToActivate.classList.add('active');
+        const API_BASE_URL = 'http://localhost:3001/api';
+        let authToken = null;
+        let tenantId = null;
+
+        const loginSection = document.getElementById('login-section');
+        const dashboardSection = document.getElementById('dashboard');
+        const errorZone = document.getElementById('error-zone');
+
+        function showError(message) {
+            errorZone.textContent = message;
+            errorZone.classList.remove('hidden');
         }
 
-        function handleSuccessfulLogin(data) {
-            tenantInfo = data.data.user;
-            localStorage.setItem('sellerToken', data.data.token);
-            localStorage.setItem('tenantInfo', JSON.stringify(tenantInfo));
-            document.getElementById('authContainer').classList.remove('active');
-            document.getElementById('dashboardContainer').classList.add('active');
-            document.getElementById('welcomeMessage').textContent = `Welcome, ${tenantInfo.nama_tenant}! (ID: ${tenantInfo.id_tenant})`;
-            document.getElementById('slotCapacity').value = tenantInfo.slot_per_time || 0;
-            fetchMyMenu();
-            fetchOrders();
-        }
-        
-        function logout() {
-            tenantInfo = null;
-            localStorage.removeItem('sellerToken');
-            localStorage.removeItem('tenantInfo');
-            document.getElementById('authContainer').classList.add('active');
-            document.getElementById('dashboardContainer').classList.remove('active');
-        }
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            errorZone.classList.add('hidden');
 
-        window.onload = function() {
-            const storedToken = localStorage.getItem('sellerToken');
-            const storedTenantInfo = localStorage.getItem('tenantInfo');
-            if (storedToken && storedTenantInfo) {
-                handleSuccessfulLogin({ data: { token: storedToken, user: JSON.parse(storedTenantInfo) } });
-            }
-        };
-        
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            const responseEl = document.getElementById('authResponse');
             try {
-                const response = await fetch(`${API_URL}/auth/login`, {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
-                const data = await response.json();
-                responseEl.textContent = JSON.stringify(data, null, 2);
-                responseEl.style.display = 'block';
-                if (data.success && data.data.user.role === 'seller') {
-                    handleSuccessfulLogin(data);
-                } else {
-                    responseEl.textContent += '\n\nLogin failed. Please check credentials or ensure the user is a seller.';
+
+                const result = await response.json();
+                if (!result.success || result.data.user.role !== 'seller') {
+                    throw new Error(result.message || 'Login failed or not a seller account.');
                 }
+                
+                authToken = result.data.token;
+                tenantId = result.data.user.id_tenant;
+
+                loginSection.classList.add('hidden');
+                dashboardSection.classList.remove('hidden');
+
+                // Load data after successful login
+                loadMenu();
+                loadOrders();
+
             } catch (error) {
-                responseEl.textContent = 'Error: ' + error.message;
-                responseEl.style.display = 'block';
+                showError(error.message);
             }
-        });
-        
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const responseEl = document.getElementById('authResponse');
-            const data = {
-                name: document.getElementById('storeName').value,
-                storeName: document.getElementById('storeName').value,
-                email: document.getElementById('regEmail').value,
-                password: document.getElementById('regPassword').value,
-            };
+        }
+
+        async function loadMenu() {
+            if (!authToken) return;
+            const menuList = document.getElementById('menu-list');
+            menuList.innerHTML = '<li>Loading menu...</li>';
+
             try {
-                const response = await fetch(`${API_URL}/auth/register/seller`, {
+                const response = await fetch(`${API_BASE_URL}/menus/tenants/${tenantId}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const result = await response.json();
+                if (!result.success) throw new Error(result.message);
+
+                menuList.innerHTML = '';
+                result.data.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'menu-item';
+                    li.innerHTML = `
+                        <span>
+                            <strong>${item.nama_menu}</strong> - Rp ${parseInt(item.harga_menu).toLocaleString('id-ID')}
+                        </span>
+                        <button class="delete-btn" onclick="deleteMenu('${item.id_menu}')">Delete</button>
+                    `;
+                    menuList.appendChild(li);
+                });
+
+            } catch (error) {
+                showError(`Could not load menu: ${error.message}`);
+            }
+        }
+
+        async function addMenu() {
+            const name = document.getElementById('menu-name').value;
+            const description = document.getElementById('menu-desc').value;
+            const price = document.getElementById('menu-price').value;
+            errorZone.classList.add('hidden');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/menus/add`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ name, description, price: parseFloat(price) })
                 });
                 const result = await response.json();
-                responseEl.textContent = JSON.stringify(result, null, 2);
-                responseEl.style.display = 'block';
-                if(result.success) {
-                    responseEl.textContent += "\n\nRegistration successful! Please login.";
-                    showAuthTab('login');
-                }
+                if (!result.success) throw new Error(result.message);
+                
+                // Clear form and reload menu
+                document.getElementById('menu-name').value = '';
+                document.getElementById('menu-desc').value = '';
+                document.getElementById('menu-price').value = '';
+                loadMenu();
+
             } catch (error) {
-                responseEl.textContent = 'Error: ' + error.message;
-                responseEl.style.display = 'block';
+                showError(`Could not add menu: ${error.message}`);
             }
-        });
-        
-        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!tenantInfo || !tenantInfo.id_tenant) { alert("Please log in first."); return; }
-            const formData = new FormData();
-            const fileField = document.querySelector('input[type="file"]');
-            formData.append('image', fileField.files[0]);
-            const responseEl = document.getElementById('uploadResponse');
+        }
+
+        async function deleteMenu(menuId) {
+            if (!confirm('Are you sure you want to delete this menu item?')) return;
+            errorZone.classList.add('hidden');
+
             try {
-                const response = await fetch(`${API_URL}/tenant-images/upload/${tenantInfo.id_tenant}`, {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('sellerToken')}` }
+                const response = await fetch(`${API_BASE_URL}/menus/${menuId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
                 });
                 const result = await response.json();
-                responseEl.textContent = JSON.stringify(result, null, 2);
-                responseEl.style.display = 'block';
+                if (!result.success) throw new Error(result.message);
+                
+                loadMenu(); // Refresh the list
             } catch (error) {
-                responseEl.textContent = 'Error: ' + error.message;
-                responseEl.style.display = 'block';
+                showError(`Could not delete menu: ${error.message}`);
             }
-        });
+        }
 
-        document.getElementById('slotCapacityForm').addEventListener('submit', async(e) => {
-            e.preventDefault();
-            const token = localStorage.getItem('sellerToken');
-            if (!token) { alert('Session expired. Please log in again.'); logout(); return; }
-            const responseEl = document.getElementById('slotCapacityResponse');
-            const slotPerTime = parseInt(document.getElementById('slotCapacity').value, 10);
+        async function loadOrders() {
+            if (!authToken) return;
+            const orderList = document.getElementById('order-list');
+            orderList.innerHTML = '<li>Loading orders...</li>';
+            
             try {
-                const response = await fetch(`${API_URL}/tenants/slot-capacity`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ slotPerTime })
+                const response = await fetch(`${API_BASE_URL}/orders/tenant/all`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
                 });
                 const result = await response.json();
-                responseEl.textContent = JSON.stringify(result, null, 2);
-                responseEl.style.display = 'block';
-            } catch (error) {
-                responseEl.textContent = 'Error: ' + error.message;
-                responseEl.style.display = 'block';
-            }
-        });
+                if (!result.success) throw new Error(result.message);
 
-        document.getElementById('addMenuForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const token = localStorage.getItem('sellerToken');
-            if (!token) { alert('Session expired. Please log in again.'); logout(); return; }
-            const responseEl = document.getElementById('addMenuResponse');
-            const menuData = {
-                name: document.getElementById('menuName').value,
-                description: document.getElementById('menuDescription').value,
-                price: parseFloat(document.getElementById('menuPrice').value),
-            };
-            if (!menuData.name || !menuData.price) {
-                responseEl.textContent = 'Menu name and price are required.';
-                responseEl.style.display = 'block';
-                return;
-            }
-            try {
-                const response = await fetch(`${API_URL}/menus/add`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify(menuData)
-                });
-                const result = await response.json();
-                responseEl.textContent = JSON.stringify(result, null, 2);
-                responseEl.style.display = 'block';
-                if (result.success) {
-                    document.getElementById('addMenuForm').reset();
-                    fetchMyMenu();
-                }
-            } catch (error) {
-                responseEl.textContent = 'Error: ' + error.message;
-                responseEl.style.display = 'block';
-            }
-        });
+                orderList.innerHTML = '';
+                result.data.forEach(order => {
+                    const li = document.createElement('li');
+                    li.className = 'order-item';
+                    
+                    const itemsHtml = order.items.map(item => 
+                        `<li>${item.quantity}x ${item.nama_menu} - Rp ${parseInt(item.subtotal).toLocaleString('id-ID')}</li>`
+                    ).join('');
 
-        async function fetchMyMenu() {
-            if (!tenantInfo || !tenantInfo.id_tenant) { return; }
-            const token = localStorage.getItem('sellerToken');
-            const menuListEl = document.getElementById('myMenuList');
-            menuListEl.innerHTML = '<p>Loading menu...</p>';
-            try {
-                const response = await fetch(`${API_URL}/menus/tenants/${tenantInfo.id_tenant}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await response.json();
-                menuListEl.innerHTML = '';
-                if (data.success && data.data.length > 0) {
-                    data.data.forEach(item => {
-                        const statusClass = item.availability === 1 ? 'Available' : 'Out.of.Stock';
-                        const statusText = item.availability === 1 ? 'Available' : 'Out of Stock';
-                        const buttonText = item.availability === 1 ? 'Mark as Out of Stock' : 'Mark as Available';
-                        const newAvailability = item.availability === 1 ? 0 : 1;
-                        const buttonClass = item.availability === 1 ? 'btn-unavailable' : 'btn-available';
-
-                        const div = document.createElement('div');
-                        div.className = 'menu-card';
-                        div.innerHTML = `
-                            <h4>${item.nama_menu}</h4>
-                            <p>Rp ${item.harga_menu}</p>
-                            <p><span class="status status-${statusClass}">${statusText}</span></p>
-                            <div class="menu-actions">
-                                <button class="${buttonClass}" onclick="updateMenuAvailability('${item.id_menu}', ${newAvailability})">${buttonText}</button>
+                    li.innerHTML = `
+                        <div>
+                            <strong>Order ID:</strong> ${order.id_transaksi} <br>
+                            <strong>Customer:</strong> ${order.customer_name} <br>
+                            <strong>Total:</strong> Rp ${parseInt(order.total_amount).toLocaleString('id-ID')} <br>
+                            <strong>Status:</strong> ${order.status}
+                            <div class="order-details">
+                                <strong>Items:</strong>
+                                <ul>${itemsHtml}</ul>
                             </div>
-                        `;
-                        menuListEl.appendChild(div);
-                    });
-                } else if (data.success) {
-                    menuListEl.innerHTML = '<p>You have not added any menu items yet.</p>';
-                } else {
-                    menuListEl.innerHTML = `<p>Error fetching menu: ${data.message}</p>`;
-                }
-            } catch (error) {
-                menuListEl.innerHTML = `<p>Error: ${error.message}</p>`;
-            }
-        }
-
-        async function updateMenuAvailability(menuId, availability) {
-            const token = localStorage.getItem('sellerToken');
-            if (!token) { alert('Session expired. Please log in again.'); logout(); return; }
-            const responseEl = document.getElementById('menuResponse');
-            try {
-                const response = await fetch(`${API_URL}/menus/${menuId}/availability`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ availability })
+                        </div>
+                    `;
+                    orderList.appendChild(li);
                 });
-                const result = await response.json();
-                responseEl.textContent = JSON.stringify(result, null, 2);
-                responseEl.style.display = 'block';
-                if (result.success) {
-                    fetchMyMenu(); // Refresh the list to show the change
-                }
-            } catch (error) {
-                responseEl.textContent = 'Error: ' + error.message;
-                responseEl.style.display = 'block';
-            }
-        }
 
-        async function fetchOrders() {
-            const token = localStorage.getItem('sellerToken');
-            if (!token) { alert('Session expired. Please log in again.'); logout(); return; }
-            const orderListEl = document.getElementById('orderList');
-            const orderResponseEl = document.getElementById('orderResponse');
-            orderListEl.innerHTML = '<p>Loading orders...</p>';
-            try {
-                const response = await fetch(`${API_URL}/orders/tenant/all`, { headers: { 'Authorization': `Bearer ${token}` } });
-                const data = await response.json();
-                orderListEl.innerHTML = '';
-                if (data.success) {
-                    if (data.data.length === 0) { orderListEl.innerHTML = '<p>No orders found.</p>'; return; }
-                    data.data.forEach(order => {
-                        const card = document.createElement('div');
-                        card.className = 'order-card';
-                        const statusTrimmed = order.status.trim();
-                        // **THE FIX**: Removed the .substring(0, 8) to show the full ID
-                        card.innerHTML = `
-                            <h3>Order #${order.id_transaksi}</h3>
-                            <p><strong>Customer:</strong> ${order.customer_name}</p>
-                            <p><strong>Date:</strong> ${new Date(order.transaction_date).toLocaleString()}</p>
-                            <p><strong>Pickup:</strong> ${order.timeslot}</p>
-                            <p><strong>Total:</strong> Rp ${order.total_amount}</p>
-                            <p><strong>Status:</strong> <span class="status status-${statusTrimmed.replace(' ', '.')}">${statusTrimmed}</span></p>
-                            <div class="actions">${generateActionButtons(order.id_transaksi, statusTrimmed)}</div>`;
-                        orderListEl.appendChild(card);
-                    });
-                } else {
-                    orderResponseEl.textContent = 'Error fetching orders: ' + data.message;
-                    orderResponseEl.style.display = 'block';
-                }
             } catch (error) {
-                orderResponseEl.textContent = 'Error: ' + error.message;
-                orderResponseEl.style.display = 'block';
-            }
-        }
-        function generateActionButtons(transactionId, status) {
-            let buttons = '';
-            if (status === 'Pending') {
-                buttons += `<button class="btn-accept" onclick="updateOrderStatus('${transactionId}', 'On Process')">Accept</button>`;
-                buttons += `<button class="btn-cancel" onclick="updateOrderStatus('${transactionId}', 'Cancelled')">Reject</button>`;
-            } else if (status === 'On Process') {
-                buttons += `<button class="btn-complete" onclick="updateOrderStatus('${transactionId}', 'Completed')">Ready for Pickup</button>`;
-                buttons += `<button class="btn-cancel" onclick="updateOrderStatus('${transactionId}', 'Cancelled')">Cancel Order</button>`;
-            } else {
-                buttons = '<p style="font-size: 0.8rem; color: #6c757d;">No actions available.</p>';
-            }
-            return buttons;
-        }
-        async function updateOrderStatus(transactionId, newStatus) {
-            const token = localStorage.getItem('sellerToken');
-            if (!token) { alert('Session expired. Please log in again.'); logout(); return; }
-            const orderResponseEl = document.getElementById('orderResponse');
-            try {
-                const response = await fetch(`${API_URL}/orders/${transactionId}/status`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ status: newStatus })
-                });
-                const data = await response.json();
-                responseEl.textContent = JSON.stringify(data, null, 2);
-                responseEl.style.display = 'block';
-                if (data.success) { fetchOrders(); }
-            } catch (error) {
-                orderResponseEl.textContent = 'Error: ' + error.message;
-                responseEl.style.display = 'block';
+                showError(`Could not load orders: ${error.message}`);
             }
         }
     </script>
