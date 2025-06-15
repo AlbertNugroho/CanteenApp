@@ -5,12 +5,12 @@ import {
   FlatList,
   ActivityIndicator,
   Alert,
-  Image,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import activitystyle from "../../styles/activitystyle";
 import * as SecureStore from "expo-secure-store";
 import BASE_URL from "../../utils/config";
+import { router } from "expo-router";
 
 const Activity = () => {
   const [showHistory, setShowHistory] = useState(false);
@@ -29,11 +29,9 @@ const Activity = () => {
       const json = await res.json();
       if (json.success) {
         setOrders(json.data);
-      } else {
-        // console.error("Fetch error:", json.message);
       }
     } catch (err) {
-      // console.error("Fetch error:", err);
+      Alert.alert("Error", err.message);
     } finally {
       setLoading(false);
     }
@@ -150,8 +148,28 @@ const Activity = () => {
           Pickup: {item.timeslot}
         </Text>
         <Text style={activitystyle.activitycontainertext2}>
-          Total: Rp {item.total_amount}
+          Total: Rp {parseInt(item.total_amount).toLocaleString("id-ID")}
         </Text>
+
+        {/* 🛒 Order Items */}
+        {item.items && item.items.length > 0 && (
+          <View style={{ marginTop: 8 }}>
+            <Text style={activitystyle.activitycontainertext2}>Items:</Text>
+            {item.items.map((menuItem, idx) => (
+              <Text
+                key={idx}
+                style={[
+                  activitystyle.activitycontainertext2,
+                  { marginLeft: 8 },
+                ]}
+              >
+                • {menuItem.quantity}x {menuItem.nama_menu} - Rp{" "}
+                {parseInt(menuItem.subtotal).toLocaleString("id-ID")}
+              </Text>
+            ))}
+          </View>
+        )}
+
         <View style={activitystyle.activitycontainer}>
           <View style={activitystyle.buttons}>{renderActions()}</View>
           <Text style={activitystyle.activityindicator}>Status: {status}</Text>

@@ -132,6 +132,49 @@ const VendorHome = () => {
       setIsUpdatingSlot(false);
     }
   };
+  const handleDelete = (menuId) => {
+    Alert.alert(
+      "Confirm Delete",
+      "Are you sure you want to delete this menu item?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Yes",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const token = await SecureStore.getItemAsync("token");
+              if (!token) {
+                Alert.alert("Error", "Session expired. Please log in again.");
+                return;
+              }
+
+              const response = await fetch(`${BASE_URL}/api/menus/${menuId}`, {
+                method: "DELETE",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+
+              const result = await response.json();
+
+              if (!result.success) {
+                throw new Error(result.message);
+              }
+
+              fetchMenus(); // Refresh menu list after deletion
+            } catch (error) {
+              Alert.alert("Error", `Could not delete menu: ${error.message}`);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const toggleAvailability = async (menuId, currentAvailability) => {
     try {
       const token = await SecureStore.getItemAsync("token");
@@ -258,6 +301,23 @@ const VendorHome = () => {
 
               return (
                 <View key={menu.id_menu} style={vendordetailstyle.menuItem}>
+                  <TouchableOpacity
+                    onPress={() => handleDelete(menu.id_menu)}
+                    style={{
+                      position: "absolute",
+                      top: 10,
+                      right: 10,
+                      backgroundColor: "#E74C3C",
+                      borderRadius: 50,
+                      padding: 4,
+                      width: 28,
+                      height: 28,
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Ionicons name="trash-outline" size={16} color="white" />
+                  </TouchableOpacity>
                   <Image
                     source={{
                       uri: menuImages[menu.id_menu],
