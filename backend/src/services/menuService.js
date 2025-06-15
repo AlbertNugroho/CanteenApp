@@ -119,3 +119,52 @@ exports.updateMenuAvailability = async (menuId, availability, tenantId) => {
 
     return { message: 'Availability updated successfully.' };
 };
+
+/**
+ * [NEW] Delete a menu item
+ * @param {string} menuId - The ID of the menu item to delete
+ * @param {string} tenantId - The ID of the tenant making the request (for authorization)
+ * @returns {Promise<Object>} The result of the delete operation
+ */
+exports.deleteMenuItem = async (menuId, tenantId) => {
+  // First, we must delete referencing rows in child tables (detail_cart, detail_transaksi).
+  // This is important to avoid foreign key constraint errors.
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // Check if the menu item belongs to the tenant making the request
+    const [menu] = await connection.query(
+      'SELECT id_tenant FROM menu WHERE id_menu = ?',
+      [menuId]
+    );
+    if (menu.length === 0 || menu[0].id_tenant !== tenantId) {
+      throw new Error('Menu item not found or you do not have permission to delete it.');
+    }
+
+    // Delete from child tables first
+    await connection.query('DELETE FROM detail_cart WHERE id_menu = ?', [menuId]);
+    await connection.query('DELETE FROM detail_transaksi WHERE id_menu = ?', [menuId]);
+
+    // Finally, delete the menu item itself
+    const [result] = await connection.query(
+      'DELETE FROM menu WHERE id_menu = ? AND id_tenant = ?',
+      [menuId, tenantId]
+    );
+    
+    await connection.commit();
+    
+    if (result.affectedRows === 0) {
+      // This case should ideally not be hit due to the check above, but it's good practice.
+      throw new Error('Menu item not found or you do not have permission to delete it.');
+    }
+
+    return { message: 'Menu item deleted successfully.' };
+  } catch (error) {
+    await connection.rollback();
+    console.error('Error in deleteMenuItem service:', error);
+    throw error;
+  } finally {
+    connection.release();
+  }
+};

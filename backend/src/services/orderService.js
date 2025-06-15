@@ -155,7 +155,7 @@ exports.checkout = async (userId, tenantId, timeslot) => {
 /**
  * Get all orders for a specific tenant (seller)
  * @param {string} tenantId - The ID of the tenant
- * @returns {Promise<Array>} A list of orders for the tenant
+ * @returns {Promise<Array>} A list of orders for the tenant with detailed items
  */
 exports.getOrdersByTenantId = async (tenantId) => {
   try {
@@ -173,6 +173,22 @@ exports.getOrdersByTenantId = async (tenantId) => {
       ORDER BY t.transaction_date DESC`,
       [tenantId]
     );
+
+    // [MODIFIED] For each order, fetch its detailed items
+    for (const order of orders) {
+      const [items] = await db.query(
+        `SELECT
+          dt.quantity,
+          dt.subtotal,
+          m.nama_menu
+        FROM detail_transaksi dt
+        JOIN menu m ON dt.id_menu = m.id_menu
+        WHERE dt.id_transaksi = ?`,
+        [order.id_transaksi]
+      );
+      order.items = items;
+    }
+    
     return orders;
   } catch (error) {
     console.error('Error in getOrdersByTenantId service:', error);
