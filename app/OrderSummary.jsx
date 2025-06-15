@@ -5,6 +5,7 @@ import * as SecureStore from "expo-secure-store";
 import ordersummarystyle from "../styles/ordersummarystyle";
 import BASE_URL from "../utils/config";
 import DropDownPicker from "react-native-dropdown-picker";
+import { fetchMenuImage } from "../utils/fetchimages";
 
 export default function OrderSummary() {
   const router = useRouter();
@@ -18,33 +19,6 @@ export default function OrderSummary() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [dropdownItems, setDropdownItems] = useState([]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const token = await SecureStore.getItemAsync("token");
-        const [menusRes, cartRes] = await Promise.all([
-          fetch(`${BASE_URL}/api/menus/tenants/${id}`),
-          fetch(`${BASE_URL}/api/cart/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
-
-        const { data: menus } = await menusRes.json();
-        const { data: cartItems } = await cartRes.json();
-        console.log("menus", menus);
-        console.log("cartItems", cartItems);
-        setVendorMenus(menus);
-        const initQty = {};
-        cartItems.forEach((c) => {
-          initQty[String(c.id_menu)] = c.quantity;
-        });
-        setQuantities(initQty);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching data", err);
-      }
-    })();
-  }, [id]);
   useEffect(() => {
     (async () => {
       try {
@@ -64,6 +38,14 @@ export default function OrderSummary() {
         ]);
 
         const menus = (await menusRes.json()).data;
+
+        const menusWithImages = await Promise.all(
+          menus.map(async (menu) => {
+            const imageUrl = await fetchMenuImage(menu.id_menu);
+            return { ...menu, gambar_menu: imageUrl };
+          })
+        );
+
         const cartItems = (await cartRes.json()).data;
         const slotData = (await slotsRes.json()).data;
 
@@ -73,7 +55,7 @@ export default function OrderSummary() {
         });
 
         setQuantities(initQty);
-        setVendorMenus(menus);
+        setVendorMenus(menusWithImages);
         setTimeslots(slotData);
         setDropdownItems(
           slotData.map((slot) => ({

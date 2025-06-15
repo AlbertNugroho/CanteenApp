@@ -6,15 +6,17 @@ import {
   ScrollView,
   TouchableOpacity,
   FlatList,
+  ActivityIndicator,
 } from "react-native";
 import { useFonts } from "expo-font";
 import React, { useState, useEffect } from "react";
-import { useTheme } from "@react-navigation/native";
+import { useTheme, useFocusEffect } from "@react-navigation/native";
 import vendordetailstyle from "../styles/vendordetailstyle";
 import { router } from "expo-router";
-import { useFocusEffect } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
 import BASE_URL from "../utils/config";
+import { fetchMenuImage } from "../utils/fetchimages";
+import { fetchTenantImage } from "../utils/fetchimages";
 
 export default function VendorDetails() {
   const { id } = useLocalSearchParams();
@@ -22,6 +24,56 @@ export default function VendorDetails() {
   const [vendorMenus, setVendorMenus] = useState([]);
   const [vendorOverview, setVendorOverview] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [tenantImage, setTenantImage] = useState(null);
+  const { colors } = useTheme();
+
+  const fetchCartFromServer = async () => {
+    try {
+      const token = await SecureStore.getItemAsync("token");
+      if (!token) throw new Error("Token not found");
+
+      const response = await fetch(`${BASE_URL}/api/cart/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const result = await response.json();
+      if (result.success && Array.isArray(result.data)) {
+        const newQuantities = {};
+        result.data.forEach((item) => {
+          newQuantities[item.id_menu] = item.quantity;
+        });
+        setQuantities(newQuantities);
+      }
+    } catch (error) {
+      console.error("Failed to fetch cart from server:", error);
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchCartFromServer();
+      return () => {};
+    }, [id])
+  );
+
+  const updateCartItem = async (menuId, newQuantity, token) => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/cart/update`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ menuId, quantity: newQuantity }),
+      });
+
+      const data = await response.json();
+      return data.success;
+    } catch (error) {
+      console.error("Error updating cart:", error.message);
+      return false;
+    }
+  };
 
   const increase = async (menuId) => {
     const token = await SecureStore.getItemAsync("token");
@@ -29,13 +81,9 @@ export default function VendorDetails() {
 
     const currentQty = quantities[menuId] || 0;
     const newQty = currentQty + 1;
-
     const success = await updateCartItem(menuId, newQty, token);
     if (success) {
-      setQuantities((prev) => ({
-        ...prev,
-        [menuId]: newQty,
-      }));
+      setQuantities((prev) => ({ ...prev, [menuId]: newQty }));
     }
   };
 
@@ -50,94 +98,17 @@ export default function VendorDetails() {
       try {
         await fetch(`${BASE_URL}/api/cart/delete/${menuId}`, {
           method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
-        setQuantities((prev) => ({
-          ...prev,
-          [menuId]: 0,
-        }));
-        console.log(`Deleted menu ${menuId}`);
+        setQuantities((prev) => ({ ...prev, [menuId]: 0 }));
       } catch (err) {
         console.error("Delete failed:", err);
       }
     } else {
       const success = await updateCartItem(menuId, newQty, token);
       if (success) {
-        setQuantities((prev) => ({
-          ...prev,
-          [menuId]: newQty,
-        }));
+        setQuantities((prev) => ({ ...prev, [menuId]: newQty }));
       }
-    }
-  };
-  const fetchCartFromServer = async () => {
-    try {
-      const token = await SecureStore.getItemAsync("token");
-      if (!token) throw new Error("Token not found");
-
-      const response = await fetch(`${BASE_URL}/api/cart/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const result = await response.json();
-      console.log("Cart result from server:", result);
-
-      if (result.success && Array.isArray(result.data)) {
-        const newQuantities = {};
-        result.data.forEach((item) => {
-          newQuantities[item.id_menu] = item.quantity;
-        });
-
-        setQuantities(newQuantities);
-      } else {
-        console.warn("Unexpected cart data format:", result);
-      }
-    } catch (error) {
-      console.error("Failed to fetch cart from server:", error);
-    }
-  };
-
-  useFocusEffect(
-    React.useCallback(() => {
-      const initCart = async () => {
-        await fetchCartFromServer();
-        console.debug("Fetched cart on focus:", Object.entries(quantities));
-      };
-
-      initCart();
-
-      // Optional cleanup
-      return () => {};
-    }, [id])
-  );
-
-  const updateCartItem = async (menuId, newQuantity, token) => {
-    try {
-      const response = await fetch(`${BASE_URL}/api/cart/update`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          menuId,
-          quantity: newQuantity,
-        }),
-      });
-
-      const data = await response.json();
-      if (!data.success) {
-        console.error("Update failed:", data.message);
-        return false;
-      }
-      return true;
-    } catch (error) {
-      console.error("Error updating cart:", error.message);
-      return false;
     }
   };
 
@@ -152,19 +123,10 @@ export default function VendorDetails() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          menuId,
-          tenantId: id,
-          quantity,
-        }),
+        body: JSON.stringify({ menuId, tenantId: id, quantity }),
       });
 
-      setQuantities((prev) => ({
-        ...prev,
-        [menuId]: quantity,
-      }));
-
-      console.log(`Added menu ${menuId} = ${quantity}`);
+      setQuantities((prev) => ({ ...prev, [menuId]: quantity }));
     } catch (error) {
       console.error("Add failed:", error);
     }
@@ -175,13 +137,22 @@ export default function VendorDetails() {
       try {
         const response = await fetch(`${BASE_URL}/api/menus/tenants/${id}`);
         const data = await response.json();
-        setVendorMenus(data.data);
+
+        const menusWithImages = await Promise.all(
+          data.data.map(async (menu) => {
+            const imageUrl = await fetchMenuImage(menu.id_menu);
+            return { ...menu, gambar_menu: imageUrl };
+          })
+        );
+
+        setVendorMenus(menusWithImages);
       } catch (error) {
         console.error("Failed to fetch menus:", error);
       } finally {
         setLoading(false);
       }
     };
+
     fetchMenus();
   }, [id]);
 
@@ -191,8 +162,12 @@ export default function VendorDetails() {
         const response = await fetch(`${BASE_URL}/api/canteens`);
         const data = await response.json();
         const foundVendor = data.data.find((v) => v.id_tenant === id);
-        console.log("BASE_URL is", BASE_URL);
         setVendorOverview(foundVendor || null);
+
+        if (foundVendor) {
+          const image = await fetchTenantImage(foundVendor.id_tenant);
+          setTenantImage(image);
+        }
       } catch (error) {
         console.error("Failed to fetch vendor overview:", error);
       }
@@ -201,12 +176,10 @@ export default function VendorDetails() {
     fetchVendor();
   }, [id]);
 
-  const { colors } = useTheme();
-
   if (loading) {
     return (
-      <View>
-        <Text>Loading...</Text>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#000" />
       </View>
     );
   }
@@ -214,31 +187,24 @@ export default function VendorDetails() {
   const prices = vendorMenus.map((menu) => parseFloat(menu.harga_menu));
   const minPrice = Math.min(...prices);
   const maxPrice = Math.max(...prices);
-
   const topPicks = [...vendorMenus].sort((a, b) => b.b - a.b).slice(0, 3);
-
   const totalItems = Object.values(quantities).reduce(
     (sum, qty) => sum + qty,
     0
   );
-
   const totalPrice = vendorMenus.reduce((sum, item) => {
     const qty = quantities[item.id_menu] || 0;
     return sum + parseFloat(item.harga_menu) * qty;
   }, 0);
 
   const renderImageItem = ({ item }) => {
-    const quantity = quantities[item.id_menu] || 0; // separate const for quantity
+    const quantity = quantities[item.id_menu] || 0;
 
     return (
       <View style={vendordetailstyle.TopPicksContainer}>
         <Image
           style={vendordetailstyle.FoodImg}
-          source={
-            item.gambar_menu && item.gambar_menu.trim() !== ""
-              ? { uri: item.gambar_menu }
-              : require("../assets/images/Banner.png")
-          }
+          source={{ uri: item.gambar_menu }}
         />
         {item.availability !== 1 && (
           <View style={vendordetailstyle.unavailableOverlay} />
@@ -253,9 +219,7 @@ export default function VendorDetails() {
             <TouchableOpacity
               style={vendordetailstyle.addButtontoppicks}
               disabled={item.availability !== 1}
-              onPress={() => {
-                handleAdd(item.id_menu, 1, true); // explicitly sync as add
-              }}
+              onPress={() => handleAdd(item.id_menu, 1)}
             >
               <Text style={{ color: "#000000", fontFamily: "Calibri" }}>
                 {item.availability === 1 ? "Add" : "Sold Out"}
@@ -288,12 +252,9 @@ export default function VendorDetails() {
       {totalItems > 0 && (
         <TouchableOpacity
           style={vendordetailstyle.BuyButtonContainer}
-          onPress={async () => {
-            router.push({
-              pathname: "/OrderSummary",
-              params: { id },
-            });
-          }}
+          onPress={() =>
+            router.push({ pathname: "/OrderSummary", params: { id } })
+          }
         >
           <View style={vendordetailstyle.BuyButton}>
             <Text style={vendordetailstyle.BuyButtonText1}>
@@ -312,14 +273,11 @@ export default function VendorDetails() {
           source={require("../assets/images/image 2.png")}
           style={vendordetailstyle.bgimage}
         />
+
         <View style={vendordetailstyle.headercontainer}>
           <Image
             style={vendordetailstyle.ppimg}
-            source={
-              vendorOverview?.image
-                ? { uri: vendorOverview.image }
-                : require("../assets/images/LavaChicken.png") // a placeholder image
-            }
+            source={{ uri: tenantImage }}
           />
           <View style={vendordetailstyle.header}>
             <Text style={vendordetailstyle.vendorname}>
@@ -360,16 +318,12 @@ export default function VendorDetails() {
 
         <Text style={vendordetailstyle.title}>All Menu</Text>
         {vendorMenus.map((menu) => {
-          const quantity = quantities[menu.id_menu] || 0; // separate const here
+          const quantity = quantities[menu.id_menu] || 0;
 
           return (
             <View key={menu.id_menu} style={vendordetailstyle.menuItem}>
               <Image
-                source={
-                  menu.gambar_menu && menu.gambar_menu.trim() !== ""
-                    ? { uri: menu.gambar_menu }
-                    : require("../assets/images/Banner.png")
-                }
+                source={{ uri: menu.gambar_menu }}
                 style={vendordetailstyle.image}
               />
               {menu.availability !== 1 && (
@@ -394,9 +348,7 @@ export default function VendorDetails() {
                     <TouchableOpacity
                       style={vendordetailstyle.addButton}
                       disabled={menu.availability !== 1}
-                      onPress={() => {
-                        handleAdd(menu.id_menu, 1, true); // explicitly sync as add
-                      }}
+                      onPress={() => handleAdd(menu.id_menu, 1)}
                     >
                       <Text style={{ color: "#FFFFFF", fontFamily: "Calibri" }}>
                         {menu.availability === 1 ? "Add" : "Sold Out"}

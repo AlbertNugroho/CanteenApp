@@ -12,13 +12,14 @@ import BASE_URL from "../../utils/config";
 import search from "../../styles/search";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
+import { fetchTenantImage } from "../../utils/fetchimages";
 
 const SearchVendor = () => {
   const { q } = useLocalSearchParams(); // from route
   const [query, setQuery] = useState(q || "");
   const [vendors, setVendors] = useState([]);
   const [filtered, setFiltered] = useState([]);
-
+  const [tenantImages, setTenantImages] = useState({});
   useFocusEffect(
     useCallback(() => {
       if (q) {
@@ -33,11 +34,26 @@ const SearchVendor = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await fetch(`${BASE_URL}/api/canteens`);
-      const data = await res.json();
-      setVendors(data.data);
-      filterVendors(data.data, q || "");
+      try {
+        const res = await fetch(`${BASE_URL}/api/canteens`);
+        const data = await res.json();
+        const vendorData = data.data;
+
+        setVendors(vendorData);
+        filterVendors(vendorData, q || "");
+
+        // Fetch image URLs for each tenant
+        const imageMap = {};
+        for (const vendor of vendorData) {
+          const img = await fetchTenantImage(vendor.id_tenant);
+          imageMap[vendor.id_tenant] = img;
+        }
+        setTenantImages(imageMap);
+      } catch (error) {
+        console.error("Failed to fetch vendors or images", error);
+      }
     };
+
     fetchData();
   }, []);
 
@@ -71,11 +87,9 @@ const SearchVendor = () => {
       >
         <Image
           style={search.promoFoodsImg}
-          source={
-            item.image && item.image.trim() !== ""
-              ? { uri: item.image }
-              : require("../../assets/images/Banner.png")
-          }
+          source={{
+            uri: tenantImages[item.id_tenant],
+          }}
         />
         <View style={search.VendorsTextContainer}>
           <Text style={search.promoFoodsText}>{item.nama_tenant}</Text>

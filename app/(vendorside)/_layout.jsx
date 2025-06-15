@@ -97,13 +97,6 @@ export default function TabLayout() {
           headerTintColor: "#000000",
         }}
       />
-      <Tabs.Screen
-        name="VendorSearchVendors"
-        options={{
-          href: null,
-          title: "VendorSearchVendors",
-        }}
-      />
     </Tabs>
   );
 }

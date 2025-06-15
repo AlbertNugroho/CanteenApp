@@ -11,64 +11,24 @@ import activitystyle from "../../styles/activitystyle";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import BASE_URL from "../../utils/config";
+import { fetchTenantImage } from "../../utils/fetchimages";
 
-const renderVendorItem = ({ item }) => {
-  console.log("Item:", item); // ✅ Move it here
-
-  return (
-    <View style={activitystyle.AllVendors}>
-      <TouchableOpacity
-        activeOpacity={0.9}
-        onPress={() =>
-          router.push({
-            pathname:
-              item.status.toLowerCase() === "pending"
-                ? "../OrderOngoing"
-                : "../VendorDetails",
-            params: {
-              id:
-                item.status.toLowerCase() === "pending"
-                  ? item.id_transaksi
-                  : item.id_transaksi.split("-")[0], // gets "T009"
-            },
-          })
-        }
-      >
-        <Image
-          style={activitystyle.promoFoodsImg}
-          source={{ uri: item.image || "https://via.placeholder.com/150" }}
-        />
-        <View style={activitystyle.VendorsTextContainer}>
-          <Text style={activitystyle.promoFoodsText}>{item.nama_tenant}</Text>
-          <View
-            style={[activitystyle.promoFoodsText2, { flexDirection: "row" }]}
-          >
-            <Text style={activitystyle.promoFoodsText2}>
-              #{item.id_transaksi.substring(0, 8)}
-            </Text>
-          </View>
-          <Text style={activitystyle.indicator}>Status: {item.status}</Text>
-        </View>
-      </TouchableOpacity>
-    </View>
-  );
-};
-const OngoingView = ({ data }) => (
+const OngoingView = ({ data, renderItem }) => (
   <FlatList
     data={data}
     showsVerticalScrollIndicator={false}
     keyExtractor={(item) => item.id_transaksi}
-    renderItem={renderVendorItem}
+    renderItem={renderItem}
     ListEmptyComponent={<Text>No ongoing orders</Text>}
   />
 );
 
-const HistoryView = ({ data }) => (
+const HistoryView = ({ data, renderItem }) => (
   <FlatList
     data={data}
     showsVerticalScrollIndicator={false}
     keyExtractor={(item) => item.id_transaksi}
-    renderItem={renderVendorItem}
+    renderItem={renderItem}
     ListEmptyComponent={<Text>No history orders</Text>}
   />
 );
@@ -89,7 +49,15 @@ const Activity = () => {
       const json = await res.json();
 
       if (json.success) {
-        setOrders(json.data);
+        const ordersWithImages = await Promise.all(
+          json.data.map(async (item) => {
+            const imageUrl = await fetchTenantImage(
+              item.id_transaksi.split("-")[0]
+            );
+            return { ...item, image: imageUrl };
+          })
+        );
+        setOrders(ordersWithImages);
       } else {
         console.log("Failed to fetch orders:", json.message);
       }
@@ -103,6 +71,46 @@ const Activity = () => {
   useEffect(() => {
     fetchMyOrders();
   }, []);
+
+  const renderVendorItem = ({ item }) => {
+    return (
+      <View style={activitystyle.AllVendors}>
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() =>
+            router.push({
+              pathname:
+                item.status.toLowerCase() === "pending"
+                  ? "../OrderOngoing"
+                  : "../VendorDetails",
+              params: {
+                id:
+                  item.status.toLowerCase() === "pending"
+                    ? item.id_transaksi
+                    : item.id_transaksi.split("-")[0], // gets "T009"
+              },
+            })
+          }
+        >
+          <Image
+            style={activitystyle.promoFoodsImg}
+            source={{ uri: item.image }}
+          />
+          <View style={activitystyle.VendorsTextContainer}>
+            <Text style={activitystyle.promoFoodsText}>{item.nama_tenant}</Text>
+            <View
+              style={[activitystyle.promoFoodsText2, { flexDirection: "row" }]}
+            >
+              <Text style={activitystyle.promoFoodsText2}>
+                #{item.id_transaksi.substring(0, 8)}
+              </Text>
+            </View>
+            <Text style={activitystyle.indicator}>Status: {item.status}</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   const ongoingOrders = orders.filter(
     (order) => order.status.trim().toLowerCase() === "pending"
@@ -140,9 +148,9 @@ const Activity = () => {
         {loading ? (
           <ActivityIndicator size="large" color="#000" />
         ) : showSecondView ? (
-          <HistoryView data={historyOrders} />
+          <HistoryView data={historyOrders} renderItem={renderVendorItem} />
         ) : (
-          <OngoingView data={ongoingOrders} />
+          <OngoingView data={ongoingOrders} renderItem={renderVendorItem} />
         )}
       </View>
     </View>

@@ -7,17 +7,73 @@ import {
   ScrollView,
   StyleSheet,
   Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
-import BASE_URL from "../utils/config"; // Make sure this points to your API base
+import * as ImagePicker from "expo-image-picker";
+import BASE_URL from "../utils/config";
 import { router } from "expo-router";
 
 const AddMenu = () => {
   const [menuName, setMenuName] = useState("");
   const [menuPrice, setMenuPrice] = useState("");
   const [menuDescription, setMenuDescription] = useState("");
+  const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const pickImage = async () => {
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert(
+        "Permission Required",
+        "You need to allow access to gallery."
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const uploadImage = async (menuId) => {
+    const uriParts = image.split(".");
+    const fileType = uriParts[uriParts.length - 1];
+
+    const formData = new FormData();
+    formData.append("image", {
+      uri: image,
+      name: `menu-${menuId}.${fileType}`,
+      type: `image/${fileType}`,
+    });
+
+    const token = await SecureStore.getItemAsync("token");
+
+    const response = await fetch(`${BASE_URL}/api/images/upload/${menuId}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+      body: formData,
+    });
+
+    const result = await response.json();
+    console.log("Menu Add Response:", result);
+    if (!result.success) {
+      throw new Error(result.message || "Failed to upload image.");
+    }
+    return result;
+  };
 
   const handleSubmit = async () => {
     if (!menuName || !menuPrice) {
@@ -50,14 +106,19 @@ const AddMenu = () => {
       });
 
       const result = await response.json();
+      console.log("Menu Add Response:", result);
 
       if (result.success) {
-        router.push("/(vendorside)/VendorHome"); // Navigate to VendorHome on success
-        // Clear the form
+        if (image && result.data?.id_menu) {
+          await uploadImage(result.data.id_menu);
+        }
+
+        router.push("/(vendorside)/VendorHome");
+
         setMenuName("");
         setMenuPrice("");
         setMenuDescription("");
-        // You can also navigate back or refresh menus
+        setImage(null);
       } else {
         Alert.alert("Error", result.message || "Failed to add menu.");
       }
@@ -69,8 +130,15 @@ const AddMenu = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      <ScrollView contentContainerStyle={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      style={{ flex: 1 }}
+    >
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.label}>Menu Name</Text>
         <TextInput
           placeholder="Enter name..."
@@ -98,8 +166,12 @@ const AddMenu = () => {
         />
 
         <Text style={styles.label}>Menu Image</Text>
-        <TouchableOpacity style={styles.imagePicker}>
-          <Ionicons name="add" size={32} color="#999" />
+        <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+          {image ? (
+            <Image source={{ uri: image }} style={styles.imagePreview} />
+          ) : (
+            <Ionicons name="add" size={32} color="#999" />
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -112,7 +184,7 @@ const AddMenu = () => {
           </Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -121,6 +193,7 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 100,
     backgroundColor: "#ffffff",
+    flexGrow: 1,
   },
   label: {
     fontFamily: "CalibriBold",
@@ -135,14 +208,19 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   imagePicker: {
-    width: 80,
-    height: 80,
+    width: 100,
+    height: 100,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#ccc",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
+  },
+  imagePreview: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 8,
   },
   submitButton: {
     backgroundColor: "#000",

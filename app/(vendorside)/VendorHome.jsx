@@ -9,6 +9,8 @@ import {
   Modal,
   StyleSheet,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import React, { useEffect, useState, useCallback } from "react";
 import * as SecureStore from "expo-secure-store";
@@ -18,6 +20,7 @@ import homestyle from "@/styles/homestyle";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import BASE_URL from "../../utils/config";
+import { fetchMenuImage } from "../../utils/fetchimages";
 
 const VendorHome = () => {
   const { colors } = useTheme();
@@ -27,6 +30,7 @@ const VendorHome = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [slotCapacity, setSlotCapacity] = useState("5");
   const [slotResponse, setSlotResponse] = useState("");
+  const [menuImages, setMenuImages] = useState({});
   const [isUpdatingSlot, setIsUpdatingSlot] = useState(false);
   const fetchMenus = async () => {
     setLoadingMenus(true);
@@ -47,8 +51,21 @@ const VendorHome = () => {
       );
 
       const data = await response.json();
-      if (data.success) setMenus(data.data);
-      else console.error(data.message);
+
+      if (data.success) {
+        const fetchedMenus = data.data;
+        setMenus(fetchedMenus);
+
+        // fetch menu image for each item
+        const imageMap = {};
+        for (const menu of fetchedMenus) {
+          const img = await fetchMenuImage(menu.id_menu);
+          imageMap[menu.id_menu] = img;
+        }
+        setMenuImages(imageMap);
+      } else {
+        console.error(data.message);
+      }
     } catch (err) {
       console.error("Error fetching menus:", err);
     } finally {
@@ -115,6 +132,49 @@ const VendorHome = () => {
       setIsUpdatingSlot(false);
     }
   };
+  const handleDelete = (menuId) => {
+    Alert.alert(
+      "Confirm Delete",
+      "Are you sure you want to delete this menu item?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Yes",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const token = await SecureStore.getItemAsync("token");
+              if (!token) {
+                Alert.alert("Error", "Session expired. Please log in again.");
+                return;
+              }
+
+              const response = await fetch(`${BASE_URL}/api/menus/${menuId}`, {
+                method: "DELETE",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+
+              const result = await response.json();
+
+              if (!result.success) {
+                throw new Error(result.message);
+              }
+
+              fetchMenus(); // Refresh menu list after deletion
+            } catch (error) {
+              Alert.alert("Error", `Could not delete menu: ${error.message}`);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const toggleAvailability = async (menuId, currentAvailability) => {
     try {
       const token = await SecureStore.getItemAsync("token");
@@ -149,62 +209,173 @@ const VendorHome = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => {
-          setModalVisible(false);
-          setSlotResponse("");
-        }}
+    <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Text style={styles.title}>Set Slot Capacity</Text>
-            <Text style={styles.label}>Orders per Timeslot:</Text>
-            <TextInput
-              style={styles.input}
-              keyboardType="numeric"
-              value={slotCapacity}
-              onChangeText={setSlotCapacity}
-            />
-
-            {slotResponse !== "" && (
-              <Text
-                style={{
-                  fontSize: 12,
-                  color: slotResponse.includes("Success") ? "green" : "red",
-                  marginBottom: 10,
-                }}
-              >
-                {slotResponse}
-              </Text>
-            )}
-
-            <TouchableOpacity
-              style={[styles.button, { opacity: isUpdatingSlot ? 0.5 : 1 }]}
-              disabled={isUpdatingSlot}
-              onPress={handleSlotUpdate}
-            >
-              <Text style={styles.buttonText}>Update Capacity</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      <ScrollView contentContainerStyle={homestyle.container}>
-        <Text
-          style={{
-            fontSize: 20,
-            fontFamily: "Calibri",
-            marginVertical: 16,
-            marginHorizontal: 16,
+        <ScrollView
+          contentContainerStyle={{
+            paddingBottom: 120,
+            paddingTop: 16,
           }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          Your Menu
-        </Text>
+          <Modal
+            visible={modalVisible}
+            transparent={true}
+            onRequestClose={() => setModalVisible(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalBox}>
+                <Text style={styles.title}>Update Slot Capacity</Text>
+                <Text style={styles.label}>Slot per Time:</Text>
+                <TextInput
+                  style={styles.input}
+                  keyboardType="numeric"
+                  value={slotCapacity}
+                  onChangeText={setSlotCapacity}
+                />
 
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={handleSlotUpdate}
+                  disabled={isUpdatingSlot}
+                >
+                  <Text style={styles.buttonText}>
+                    {isUpdatingSlot ? "Updating..." : "Update"}
+                  </Text>
+                </TouchableOpacity>
+
+                {slotResponse !== "" && (
+                  <Text
+                    style={{
+                      marginTop: 10,
+                      color: slotResponse.startsWith("Success")
+                        ? "green"
+                        : "red",
+                    }}
+                  >
+                    {slotResponse}
+                  </Text>
+                )}
+              </View>
+            </View>
+          </Modal>
+
+          <Text
+            style={{
+              fontSize: 20,
+              fontFamily: "Calibri",
+              marginHorizontal: 16,
+              marginBottom: 16,
+            }}
+          >
+            Your Menu
+          </Text>
+
+          {loadingMenus ? (
+            <ActivityIndicator size="large" />
+          ) : menus.length === 0 ? (
+            <Text
+              style={{
+                fontFamily: "CalibriBold",
+                marginHorizontal: 16,
+                alignSelf: "center",
+                fontSize: 16,
+                marginTop: 200,
+              }}
+            >
+              You have not added any menu items yet.
+            </Text>
+          ) : (
+            menus.map((menu) => {
+              const isAvailable = menu.availability === 1;
+              const statusText = isAvailable ? "Available" : "Out of Stock";
+              const statusColor = isAvailable ? "green" : "red";
+              const buttonLabel = isAvailable
+                ? "Mark as Out of Stock"
+                : "Mark as Available";
+              const buttonColor = isAvailable ? "#E74C3C" : "#2ECC71";
+
+              return (
+                <View key={menu.id_menu} style={vendordetailstyle.menuItem}>
+                  <TouchableOpacity
+                    onPress={() => handleDelete(menu.id_menu)}
+                    style={{
+                      position: "absolute",
+                      top: 10,
+                      right: 10,
+                      backgroundColor: "#E74C3C",
+                      borderRadius: 50,
+                      padding: 4,
+                      width: 28,
+                      height: 28,
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Ionicons name="trash-outline" size={16} color="white" />
+                  </TouchableOpacity>
+                  <Image
+                    source={{
+                      uri: menuImages[menu.id_menu],
+                    }}
+                    style={vendordetailstyle.image}
+                  />
+                  <View style={vendordetailstyle.info}>
+                    <Text style={vendordetailstyle.name}>{menu.nama_menu}</Text>
+                    <Text style={vendordetailstyle.price}>
+                      Rp {parseFloat(menu.harga_menu).toLocaleString("id-ID")}
+                    </Text>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginTop: 8,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: statusColor,
+                          fontFamily: "CalibriBold",
+                        }}
+                      >
+                        {statusText}
+                      </Text>
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: buttonColor,
+                          paddingHorizontal: 10,
+                          paddingVertical: 6,
+                          borderRadius: 6,
+                        }}
+                        disabled={togglingId === menu.id_menu}
+                        onPress={() =>
+                          toggleAvailability(menu.id_menu, menu.availability)
+                        }
+                      >
+                        <Text
+                          style={{
+                            color: "white",
+                            fontFamily: "Calibri",
+                            fontSize: 12,
+                          }}
+                        >
+                          {buttonLabel}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              );
+            })
+          )}
+        </ScrollView>
+
+        {/* Floating Action Buttons (should be placed outside ScrollView) */}
         <TouchableOpacity
           style={{
             borderRadius: 360,
@@ -236,102 +407,19 @@ const VendorHome = () => {
           style={{
             borderRadius: 360,
             position: "absolute",
-            top: 5,
+            top: 10,
             right: 10,
             width: 50,
             height: 50,
             alignItems: "center",
             justifyContent: "center",
+            backgroundColor: "#eee",
           }}
           onPress={() => setModalVisible(true)}
         >
           <Ionicons name="settings-outline" size={24} color="black" />
         </TouchableOpacity>
-
-        {loadingMenus ? (
-          <ActivityIndicator size="large" />
-        ) : menus.length === 0 ? (
-          <Text
-            style={{
-              fontFamily: "CalibriBold",
-              marginHorizontal: 16,
-              alignSelf: "center",
-              fontSize: 16,
-              position: "absolute",
-              bottom: "50%",
-            }}
-          >
-            You have not added any menu items yet.
-          </Text>
-        ) : (
-          menus.map((menu) => {
-            const isAvailable = menu.availability === 1;
-            const statusText = isAvailable ? "Available" : "Out of Stock";
-            const statusColor = isAvailable ? "green" : "red";
-            const buttonLabel = isAvailable
-              ? "Mark as Out of Stock"
-              : "Mark as Available";
-            const buttonColor = isAvailable ? "#E74C3C" : "#2ECC71";
-
-            return (
-              <View key={menu.id_menu} style={vendordetailstyle.menuItem}>
-                <Image
-                  source={
-                    menu.gambar_menu && menu.gambar_menu.trim() !== ""
-                      ? { uri: menu.gambar_menu }
-                      : require("../../assets/images/Banner.png")
-                  }
-                  style={vendordetailstyle.image}
-                />
-                <View style={vendordetailstyle.info}>
-                  <Text style={vendordetailstyle.name}>{menu.nama_menu}</Text>
-                  <Text style={vendordetailstyle.price}>
-                    Rp {parseFloat(menu.harga_menu).toLocaleString("id-ID")}
-                  </Text>
-
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginTop: 8,
-                    }}
-                  >
-                    <Text
-                      style={{ color: statusColor, fontFamily: "CalibriBold" }}
-                    >
-                      {statusText}
-                    </Text>
-
-                    <TouchableOpacity
-                      style={{
-                        backgroundColor: buttonColor,
-                        paddingHorizontal: 10,
-                        paddingVertical: 6,
-                        borderRadius: 6,
-                      }}
-                      disabled={togglingId === menu.id_menu}
-                      onPress={() =>
-                        toggleAvailability(menu.id_menu, menu.availability)
-                      }
-                    >
-                      <Text
-                        style={{
-                          color: "white",
-                          fontFamily: "Calibri",
-                          fontSize: 12,
-                        }}
-                      >
-                        {buttonLabel}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            );
-          })
-        )}
-      </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 };

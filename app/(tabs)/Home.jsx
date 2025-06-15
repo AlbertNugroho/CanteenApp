@@ -13,16 +13,14 @@ import { router } from "expo-router";
 import { useTheme } from "@react-navigation/native";
 import homestyle from "../../styles/homestyle";
 import BASE_URL from "../../utils/config";
+import { fetchTenantImage } from "../../utils/fetchimages";
 
 const Home = () => {
   const { colors } = useTheme();
 
   const [topPicks, setTopPicks] = useState([]);
-  const [promo, setPromo] = useState([]);
   const [vendors, setVendors] = useState([]);
-
   const [loadingTopPicks, setLoadingTopPicks] = useState(true);
-  const [loadingPromo, setLoadingPromo] = useState(true);
   const [loadingVendors, setLoadingVendors] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -42,10 +40,17 @@ const Home = () => {
         const res = await fetch(`${BASE_URL}/api/canteens`);
         const data = await res.json();
 
-        setVendors(data.data);
+        const vendorsWithImages = await Promise.all(
+          data.data.map(async (vendor) => {
+            const imageUrl = await fetchTenantImage(vendor.id_tenant);
+            return { ...vendor, image: imageUrl };
+          })
+        );
+
+        setVendors(vendorsWithImages);
         setLoadingVendors(false);
 
-        const sortedByBuyers = [...data.data].sort(
+        const sortedByBuyers = [...vendorsWithImages].sort(
           (a, b) => (b.total_buyers ?? 0) - (a.total_buyers ?? 0)
         );
         const top3 = sortedByBuyers.slice(0, 3);
