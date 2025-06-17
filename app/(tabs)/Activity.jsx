@@ -62,7 +62,7 @@ const Activity = () => {
         console.log("Failed to fetch orders:", json.message);
       }
     } catch (error) {
-      console.error("Fetch orders error:", error);
+      // console.error("Fetch orders error:", error);
     } finally {
       setLoading(false);
     }

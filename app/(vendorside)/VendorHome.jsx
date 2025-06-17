@@ -64,10 +64,10 @@ const VendorHome = () => {
         }
         setMenuImages(imageMap);
       } else {
-        console.error(data.message);
+        // console.error(data.message);
       }
     } catch (err) {
-      console.error("Error fetching menus:", err);
+      // console.error("Error fetching menus:", err);
     } finally {
       setLoadingMenus(false);
     }
@@ -201,7 +201,7 @@ const VendorHome = () => {
         Alert.alert("Error", data.message || "Failed to update availability.");
       }
     } catch (err) {
-      console.error("Toggle error:", err);
+      // console.error("Toggle error:", err);
       Alert.alert("Error", err.message);
     } finally {
       setTogglingId(null);

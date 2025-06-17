@@ -69,16 +69,15 @@ const Register = () => {
           await SecureStore.setItemAsync("user", JSON.stringify(user));
         }
 
-        setMessage("Registration successful!");
+        setMessage("Registration successful! Please login");
 
-        if (userType === "seller") {
-          router.replace("/(vendorside)/VendorHome");
-        } else {
-          router.replace("/(tabs)/Home");
-        }
+        // 👇 Wait 5 seconds, then navigate to login screen
+        setTimeout(() => {
+          router.replace("/"); // or `router.push("/login")` depending on your app flow
+        }, 1000);
       }
     } catch (error) {
-      console.error("Registration error:", error);
+      // console.error("Registration error:", error);
       setMessage("Error: " + error.message);
     }
   };

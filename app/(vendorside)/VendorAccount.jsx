@@ -45,7 +45,7 @@ const Account = () => {
           setProfileImage(imageUrl); // <- Set fetched image
         }
       } catch (error) {
-        console.error("Failed to load user data:", error);
+        // console.error("Failed to load user data:", error);
       }
     };
 
@@ -103,7 +103,7 @@ const Account = () => {
       const result = await response.json();
       console.log("Upload Result:", result);
     } catch (err) {
-      console.error("Upload error:", err);
+      // console.error("Upload error:", err);
     }
   };
 
