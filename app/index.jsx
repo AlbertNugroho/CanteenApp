@@ -13,8 +13,9 @@ import * as SecureStore from "expo-secure-store";
 import binuslogo from "../styles/binuslogo";
 import login from "../styles/login";
 import BASE_URL from "../utils/config";
-
+import { LogBox } from "react-native";
 const Login = () => {
+  LogBox.ignoreLogs(["VirtualizedLists should never be nested"]);
   const router = useRouter();
 
   const [email, setEmail] = useState("");

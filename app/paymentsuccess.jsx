@@ -43,7 +43,7 @@ const paymentsuccess = () => {
         const foundVendor = data.data.find((v) => v.id_tenant === id);
         setVendorOverview(foundVendor || null);
       } catch (error) {
-        console.error("Failed to fetch vendor overview:", error);
+        // console.error("Failed to fetch vendor overview:", error);
       }
     };
 

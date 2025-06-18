@@ -66,7 +66,7 @@ export default function OrderSummary() {
         );
         setLoading(false);
       } catch (err) {
-        console.error("Error fetching data", err);
+        // console.error("Error fetching data", err);
       }
     })();
   }, [id]);

@@ -58,7 +58,7 @@ const Home = () => {
         setTopPicks(top3);
         setLoadingTopPicks(false);
       } catch (error) {
-        console.error("Failed to fetch canteens:", error);
+        // console.error("Failed to fetch canteens:", error);
         setLoadingTopPicks(false);
         setLoadingVendors(false);
       }

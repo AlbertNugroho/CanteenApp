@@ -22,6 +22,7 @@ const account = () => {
     role: "",
     userId: "",
   });
+  
   useEffect(() => {
     const loadUserData = async () => {
       try {
@@ -36,7 +37,7 @@ const account = () => {
           });
         }
       } catch (error) {
-        console.error("Failed to load user data:", error);
+        // console.error("Failed to load user data:", error);
       }
     };
 

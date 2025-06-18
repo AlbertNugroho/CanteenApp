@@ -45,7 +45,7 @@ export default function VendorDetails() {
         setQuantities(newQuantities);
       }
     } catch (error) {
-      console.error("Failed to fetch cart from server:", error);
+      // console.error("Failed to fetch cart from server:", error);
     }
   };
 
@@ -70,7 +70,7 @@ export default function VendorDetails() {
       const data = await response.json();
       return data.success;
     } catch (error) {
-      console.error("Error updating cart:", error.message);
+      // console.error("Error updating cart:", error.message);
       return false;
     }
   };
@@ -102,7 +102,7 @@ export default function VendorDetails() {
         });
         setQuantities((prev) => ({ ...prev, [menuId]: 0 }));
       } catch (err) {
-        console.error("Delete failed:", err);
+        // console.error("Delete failed:", err);
       }
     } else {
       const success = await updateCartItem(menuId, newQty, token);
@@ -128,7 +128,7 @@ export default function VendorDetails() {
 
       setQuantities((prev) => ({ ...prev, [menuId]: quantity }));
     } catch (error) {
-      console.error("Add failed:", error);
+      // console.error("Add failed:", error);
     }
   };
 
@@ -147,7 +147,7 @@ export default function VendorDetails() {
 
         setVendorMenus(menusWithImages);
       } catch (error) {
-        console.error("Failed to fetch menus:", error);
+        // console.error("Failed to fetch menus:", error);
       } finally {
         setLoading(false);
       }
@@ -169,7 +169,7 @@ export default function VendorDetails() {
           setTenantImage(image);
         }
       } catch (error) {
-        console.error("Failed to fetch vendor overview:", error);
+        // console.error("Failed to fetch vendor overview:", error);
       }
     };
 

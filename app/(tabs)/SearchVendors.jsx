@@ -50,7 +50,7 @@ const SearchVendor = () => {
         }
         setTenantImages(imageMap);
       } catch (error) {
-        console.error("Failed to fetch vendors or images", error);
+        // console.error("Failed to fetch vendors or images", error);
       }
     };
 
